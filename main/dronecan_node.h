@@ -6,8 +6,6 @@
 #include "canard.h"
 
 #define DRONECAN_NODE_ID 42
-#define DRONECAN_MEM_POOL_SIZE 4096
-#define CAN_BITRATE 1000000
 
 #define UAVCAN_NODE_STATUS_ID 341
 #define UAVCAN_NODE_STATUS_SIGNATURE 0x0F0868D0C1A7C6F1ULL
@@ -36,6 +34,5 @@ void dronecan_init();
 void dronecan_spin(void);
 void dronecan_publish_node_status(void);
 bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len);
-static volatile uint32_t g_uptime_sec = 0; // TODO remove global variable and use xTaskGetTickCount() * portTICK_PERIOD_MS * 1000 instead
 
 #endif

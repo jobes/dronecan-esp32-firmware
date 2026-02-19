@@ -108,11 +108,12 @@ static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer
     {
 
         uint8_t response[64] = {0};
+        uint32_t uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
 
-        response[0] = (uint8_t)(g_uptime_sec); // TODO replace with xTaskGetTickCount() * portTICK_PERIOD_MS * 1000
-        response[1] = (uint8_t)(g_uptime_sec >> 8);
-        response[2] = (uint8_t)(g_uptime_sec >> 16);
-        response[3] = (uint8_t)(g_uptime_sec >> 24);
+        response[0] = uptime;
+        response[1] = uptime >> 8;
+        response[2] = uptime >> 16;
+        response[3] = uptime >> 24;
         response[4] = (HEALTH_OK << 6) | MODE_OPERATIONAL;
         response[5] = 0;
         response[6] = 0;
@@ -171,12 +172,13 @@ void dronecan_init()
 
 void dronecan_publish_node_status(void)
 {
+    uint32_t uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
     uint8_t buffer[7];
 
-    buffer[0] = (uint8_t)(g_uptime_sec);
-    buffer[1] = (uint8_t)(g_uptime_sec >> 8);
-    buffer[2] = (uint8_t)(g_uptime_sec >> 16);
-    buffer[3] = (uint8_t)(g_uptime_sec >> 24);
+    buffer[0] = uptime;
+    buffer[1] = uptime >> 8;
+    buffer[2] = uptime >> 16;
+    buffer[3] = uptime >> 24;
 
     buffer[4] = (HEALTH_OK << 6) | (MODE_OPERATIONAL << 3);
 
@@ -190,8 +192,7 @@ void dronecan_publish_node_status(void)
                        sizeof(buffer));
 }
 
-bool dronecan_broadcast(uint64_t signature, uint16_t type_id,
-                        uint8_t priority, const void *payload, uint16_t len)
+bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len)
 {
 
     xSemaphoreTake(g_canard_mutex, portMAX_DELAY);
@@ -252,3 +253,4 @@ void dronecan_spin(void)
 // TODO rewrite to a library style, main.c show then have only app task.
 // TODO vendor specific code, software version, hw version, cert of authenticity
 // TODO dronecan.uavcan.protocol.gettransportstats
+// TODO turn off wifi and bluetooth and everything not needed for the node to save power

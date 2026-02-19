@@ -7,8 +7,6 @@
 
 static const char *TAG = "Main";
 
-extern volatile uint32_t g_uptime_sec;
-
 static void dronecan_spin_task(void *arg)
 {
     ESP_LOGI(TAG, "DroneCAN spin task started");
@@ -29,10 +27,7 @@ static void heartbeat_task(void *arg)
     while (1)
     {
         dronecan_publish_node_status();
-        g_uptime_sec++;
-
-        ESP_LOGI(TAG, "Heartbeat published, uptime: %lu s", g_uptime_sec);
-
+        ESP_LOGI(TAG, "Heartbeat published, uptime: %lu s", xTaskGetTickCount() * portTICK_PERIOD_MS / 1000);
         vTaskDelayUntil(&last_wake_time, pdMS_TO_TICKS(950)); // 1 second interval with some margin
     }
 }
