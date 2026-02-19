@@ -15,5 +15,4 @@ git submodule update --remote --recursive
 
 . /opt/esp-idf/export.sh
 idf.py set-target esp32c3
-idf.py build
-idf.py -p /dev/ttyACM1 flash monitor
+idf.py -p /dev/ttyACM1 build flash monitor

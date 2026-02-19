@@ -247,5 +247,8 @@ void dronecan_spin(void)
 
 // TODO send real values;
 // TODO parameter getters and setters;
+// TODO restart
 // TODO FW updater
 // TODO rewrite to a library style, main.c show then have only app task.
+// TODO vendor specific code, software version, hw version, cert of authenticity
+// TODO dronecan.uavcan.protocol.gettransportstats

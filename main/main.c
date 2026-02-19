@@ -3,6 +3,7 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 #include "dronecan_node.h"
+#include "driver/gpio.h"
 
 static const char *TAG = "Main";
 
@@ -15,7 +16,7 @@ static void dronecan_spin_task(void *arg)
     while (1)
     {
         dronecan_spin();
-        vTaskDelay(pdMS_TO_TICKS(1));
+        vTaskDelay(pdMS_TO_TICKS(CAN_READ_TIMEOUT_MS));
     }
 }
 
@@ -42,6 +43,9 @@ static void app_task(void *arg)
 
     while (1)
     {
+        gpio_set_level(GPIO_NUM_8, 1);
+        vTaskDelay(pdMS_TO_TICKS(50));
+        gpio_set_level(GPIO_NUM_8, 0);
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
@@ -54,12 +58,14 @@ void app_main(void)
 
     dronecan_init();
 
+    gpio_set_direction(GPIO_NUM_8, GPIO_MODE_OUTPUT);
+
     xTaskCreate(
         dronecan_spin_task,
         "dronecan_spin", // read, write, dronecan operator
         4096,
         NULL,
-        configMAX_PRIORITIES - 1,
+        10,
         NULL);
 
     xTaskCreate(
