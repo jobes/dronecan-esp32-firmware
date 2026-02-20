@@ -206,22 +206,6 @@ void dronecan_publish_node_status(void) // TODO check if this is full and correc
                        &transfer_id);
 }
 
-bool dronecan_publish_static_pressure(_Float32 pressure_pa, _Float16 variance_pa2)
-{
-    static uint8_t transfer_id = 0;
-    uint8_t buffer[6] = {0};
-
-    canardEncodeScalar(buffer, 0, 32, &pressure_pa);
-    canardEncodeScalar(buffer, 32, 16, &variance_pa2);
-
-    return dronecan_broadcast(UAVCAN_EQUIPMENT_AIR_DATA_STATICPRESSURE_SIGNATURE,
-                              UAVCAN_EQUIPMENT_AIR_DATA_STATICPRESSURE_ID,
-                              CANARD_TRANSFER_PRIORITY_MEDIUM,
-                              buffer,
-                              sizeof(buffer),
-                              &transfer_id);
-}
-
 bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len, uint8_t *transfer_id) // TODO check if this is full and correct
 {
 

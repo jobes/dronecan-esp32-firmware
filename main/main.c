@@ -6,6 +6,7 @@
 #include "driver/gpio.h"
 #include "bmp390.h"
 #include "bmp3.h"
+#include "messages/uavcan.equipment.air_data.StaticPressure-1028.h"
 
 static const char *TAG = "Main";
 
@@ -51,12 +52,16 @@ static void app_task(void *arg)
         {
             set_node_health(HEALTH_OK);
             float pressure_variance_pa2 = 0.0f; // Variance not provided by sensor driver yet
-            dronecan_publish_static_pressure((float)data.pressure, pressure_variance_pa2);
+            if (!publish_1028_staticPressure((float)data.pressure, pressure_variance_pa2))
+            {
+                ESP_LOGE(TAG, "Failed to publish static pressure");
+                set_node_health(HEALTH_CRITICAL);
+            }
         }
         else
         {
             ESP_LOGE(TAG, "Failed to read data from BMP390 sensor");
-            set_node_health(HEALTH_ERROR);
+            set_node_health(HEALTH_CRITICAL);
         }
         vTaskDelay(pdMS_TO_TICKS(100));
     }
