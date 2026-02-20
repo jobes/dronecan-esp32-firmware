@@ -8,9 +8,6 @@
 
 #define DRONECAN_NODE_ID 42
 
-#define UAVCAN_GET_NODE_INFO_ID 1
-#define UAVCAN_GET_NODE_INFO_SIGNATURE 0xEE468A8121C46A9EULL
-
 typedef enum
 {
     HEALTH_OK = 0,
@@ -37,5 +34,6 @@ uint8_t *get_node_health(void);
 uint8_t *get_node_mode(void);
 
 bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len, uint8_t *transfer_id);
+bool dronecan_respond(uint8_t destination_node_id, uint8_t *inout_transfer_id, uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len);
 
 #endif

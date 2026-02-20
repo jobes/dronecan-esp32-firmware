@@ -7,6 +7,7 @@
 #include "freertos/semphr.h"
 #include <string.h>
 #include "esp_mac.h"
+#include "messages/uavcan.protocol.GetNodeInfo-1.h"
 
 static const char *TAG = "DroneCAN";
 
@@ -76,7 +77,6 @@ static bool should_accept_transfer(
     CanardTransferType transfer_type,
     uint8_t source_node_id)
 {
-    // TODO make this more intelligent, maybe support some changes from main app
     (void)ins;
     (void)source_node_id;
 
@@ -94,49 +94,10 @@ static bool should_accept_transfer(
 
 static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
 {
-    // TODO refactoring, outsource message handling to a separate function, support more messages, etc
-    ESP_LOGI(TAG, "Transfer received: type_id=%d, from_node=%d",
-             transfer->data_type_id, transfer->source_node_id);
-
     if (transfer->transfer_type == CanardTransferTypeRequest &&
         transfer->data_type_id == UAVCAN_GET_NODE_INFO_ID)
     {
-
-        uint8_t response[64] = {0};
-        uint32_t uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
-
-        response[0] = uptime;
-        response[1] = uptime >> 8;
-        response[2] = uptime >> 16;
-        response[3] = uptime >> 24;
-        response[4] = (node_health << 6) | (node_mode << 3);
-        response[5] = 0;
-        response[6] = 0;
-
-        response[7] = 1;
-        response[8] = 0;
-
-        response[9] = 1;
-        response[10] = 0;
-
-        uint8_t mac[6];
-        esp_read_mac(mac, ESP_MAC_WIFI_STA);
-        memcpy(&response[11], mac, 6);
-
-        const char *name = UNIQUE_NAME;
-        size_t name_len = strlen(name);
-        response[27] = name_len;
-        memcpy(&response[28], name, name_len);
-
-        canardRequestOrRespond(ins,
-                               transfer->source_node_id,
-                               UAVCAN_GET_NODE_INFO_SIGNATURE,
-                               UAVCAN_GET_NODE_INFO_ID,
-                               &transfer->transfer_id,
-                               CANARD_TRANSFER_PRIORITY_MEDIUM,
-                               CanardResponse,
-                               response,
-                               28 + name_len);
+        response_1_getNodeInfo(transfer->source_node_id, &transfer->transfer_id);
     }
 }
 
@@ -188,7 +149,7 @@ void dronecan_init()
                should_accept_transfer,
                NULL);
 
-    canardSetLocalNodeID(&g_canard, DRONECAN_NODE_ID); // TODO make it dynamic
+    canardSetLocalNodeID(&g_canard, DRONECAN_NODE_ID);
 
     ESP_LOGI(TAG, "DroneCAN initialized with Node ID: %d", DRONECAN_NODE_ID);
 }
@@ -231,6 +192,27 @@ bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, 
     if (result <= 0)
     {
         ESP_LOGE(TAG, "Broadcast failed: %d", result);
+        return false;
+    }
+
+    return true;
+}
+
+bool dronecan_respond(uint8_t destination_node_id, uint8_t *inout_transfer_id, uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len)
+{
+    int16_t result = canardRequestOrRespond(&g_canard,
+                                            destination_node_id,
+                                            signature,
+                                            type_id,
+                                            inout_transfer_id,
+                                            priority,
+                                            CanardResponse,
+                                            payload,
+                                            len);
+
+    if (result <= 0)
+    {
+        ESP_LOGE(TAG, "Respond failed: %d", result);
         return false;
     }
 
