@@ -17,6 +17,19 @@ static SemaphoreHandle_t g_canard_mutex;
 static uint8_t node_health = HEALTH_OK;
 static uint8_t node_mode = MODE_INITIALIZATION;
 
+static void heartbeat_task(void *arg)
+{
+    ESP_LOGI("Main", "Heartbeat task started");
+
+    TickType_t last_wake_time = xTaskGetTickCount();
+
+    while (1)
+    {
+        dronecan_publish_node_status();
+        vTaskDelayUntil(&last_wake_time, pdMS_TO_TICKS(950)); // 1 second interval with some margin
+    }
+}
+
 static bool can_driver_init()
 {
     twai_mode_t mode = CAN_MODE;
@@ -147,17 +160,46 @@ static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer
     }
 }
 
-void set_node_health(uint8_t new_health)
+static void dronecan_spin(void)
 {
-    node_health = new_health;
+    xSemaphoreTake(g_canard_mutex, portMAX_DELAY);
+
+    const CanardCANFrame *frame;
+    while ((frame = canardPeekTxQueue(&g_canard)) != NULL)
+    {
+        if (can_transmit(frame))
+        {
+            canardPopTxQueue(&g_canard);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    CanardCANFrame rx_frame;
+    while (can_receive(&rx_frame))
+    {
+        canardHandleRxFrame(&g_canard, &rx_frame, xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
+    }
+
+    canardCleanupStaleTransfers(&g_canard, xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
+
+    xSemaphoreGive(g_canard_mutex);
 }
 
-void set_node_mode(uint8_t new_mode)
+static void dronecan_spin_task(void *arg)
 {
-    node_mode = new_mode;
+    ESP_LOGI("Main", "Spin task started");
+
+    while (1)
+    {
+        dronecan_spin();
+        vTaskDelay(pdMS_TO_TICKS(CAN_READ_TIMEOUT_MS));
+    }
 }
 
-void dronecan_init()
+static void dronecan_init()
 {
     ESP_LOGI(TAG, "Initializing DroneCAN node...");
 
@@ -180,6 +222,51 @@ void dronecan_init()
     canardSetLocalNodeID(&g_canard, DRONECAN_NODE_ID); // TODO make it dynamic
 
     ESP_LOGI(TAG, "DroneCAN initialized with Node ID: %d", DRONECAN_NODE_ID);
+}
+
+void init_app(TaskFunction_t app_task)
+{
+    ESP_LOGI("Main", "========================================");
+    ESP_LOGI("Main", "DroneCAN Node Starting...");
+    ESP_LOGI("Main", "========================================");
+
+    dronecan_init();
+
+    xTaskCreate(
+        dronecan_spin_task,
+        "dronecan_spin", // read, write, dronecan operator
+        4096,
+        NULL,
+        10,
+        NULL);
+
+    xTaskCreate(
+        heartbeat_task,
+        "dronecan_heartbeat",
+        2048,
+        NULL,
+        5,
+        NULL);
+
+    xTaskCreate(
+        app_task,
+        "app_task",
+        2048,
+        NULL,
+        3,
+        NULL);
+
+    ESP_LOGI("Main", "All tasks created successfully");
+}
+
+void set_node_health(uint8_t new_health)
+{
+    node_health = new_health;
+}
+
+void set_node_mode(uint8_t new_mode)
+{
+    node_mode = new_mode;
 }
 
 void dronecan_publish_node_status(void) // TODO check if this is full and correct
@@ -230,35 +317,9 @@ bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, 
     return true;
 }
 
-void dronecan_spin(void)
-{
-    xSemaphoreTake(g_canard_mutex, portMAX_DELAY);
-
-    const CanardCANFrame *frame;
-    while ((frame = canardPeekTxQueue(&g_canard)) != NULL)
-    {
-        if (can_transmit(frame))
-        {
-            canardPopTxQueue(&g_canard);
-        }
-        else
-        {
-            break;
-        }
-    }
-
-    CanardCANFrame rx_frame;
-    while (can_receive(&rx_frame))
-    {
-        canardHandleRxFrame(&g_canard, &rx_frame, xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
-    }
-
-    canardCleanupStaleTransfers(&g_canard, xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
-
-    xSemaphoreGive(g_canard_mutex);
-}
-
-// TODO send real values;
+// TODO send real values - temperature;
+// TODO move all messages out of node;
+// TODO make main.c contain only app task, everything else should be outsourced to shared
 // TODO parameter getters and setters;
 // TODO restart
 // TODO FW updater

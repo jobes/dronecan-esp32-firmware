@@ -1,6 +1,7 @@
 #ifndef DRONECAN_NODE_H
 #define DRONECAN_NODE_H
 
+#include "freertos/FreeRTOS.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include "canard.h"
@@ -30,10 +31,9 @@ typedef enum
     MODE_OFFLINE = 7
 } NodeMode;
 
+void init_app(TaskFunction_t app_task);
 void set_node_health(uint8_t new_health);
 void set_node_mode(uint8_t new_mode);
-void dronecan_init();
-void dronecan_spin(void);
 void dronecan_publish_node_status(void);
 bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len, uint8_t *transfer_id);
 
