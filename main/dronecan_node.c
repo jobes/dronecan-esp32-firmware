@@ -89,6 +89,7 @@ static bool should_accept_transfer(
     CanardTransferType transfer_type,
     uint8_t source_node_id)
 {
+    // TODO make this more intelligent, maybe support some changes from main app
     (void)ins;
     (void)source_node_id;
 
@@ -115,6 +116,7 @@ static bool should_accept_transfer(
 
 static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
 {
+    // TODO refactoring, outsource message handling to a separate function, support more messages, etc
     ESP_LOGI(TAG, "Transfer received: type_id=%d, from_node=%d",
              transfer->data_type_id, transfer->source_node_id);
 
@@ -293,7 +295,7 @@ void dronecan_publish_node_status(void) // TODO check if this is full and correc
                        &transfer_id);
 }
 
-bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len, uint8_t *transfer_id) // TODO check if this is full and correct
+bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len, uint8_t *transfer_id)
 {
 
     xSemaphoreTake(g_canard_mutex, portMAX_DELAY);
@@ -317,7 +319,7 @@ bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, 
     return true;
 }
 
-// TODO send real values - temperature;
+// TODO node should not be initialized until it gets ID, and main APP should not do anything until then - no sending pressure
 // TODO move all messages out of node;
 // TODO make main.c contain only app task, everything else should be outsourced to shared
 // TODO parameter getters and setters;
