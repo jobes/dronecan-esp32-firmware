@@ -50,8 +50,8 @@ static void app_task(void *arg)
         if (bmp390_get_data(&data) == BMP3_OK)
         {
             set_node_health(HEALTH_OK);
-            ESP_LOGI(TAG, "Pressure: %lf, Temperature: %lf", data.pressure, data.temperature);
-            // TODO send by DroneCAN
+            float pressure_variance_pa2 = 0.0f; // Variance not provided by sensor driver yet
+            dronecan_publish_static_pressure((float)data.pressure, pressure_variance_pa2);
         }
         else
         {
