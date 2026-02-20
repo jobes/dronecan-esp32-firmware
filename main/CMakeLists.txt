@@ -2,6 +2,7 @@ idf_component_register(
     SRCS 
         "main.c" 
         "dronecan_node.c"
+        "app_tasks.c"
     INCLUDE_DIRS 
         "."
     REQUIRES 

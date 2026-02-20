@@ -17,19 +17,6 @@ static SemaphoreHandle_t g_canard_mutex;
 static uint8_t node_health = HEALTH_OK;
 static uint8_t node_mode = MODE_INITIALIZATION;
 
-static void heartbeat_task(void *arg)
-{
-    ESP_LOGI("Main", "Heartbeat task started");
-
-    TickType_t last_wake_time = xTaskGetTickCount();
-
-    while (1)
-    {
-        dronecan_publish_node_status();
-        vTaskDelayUntil(&last_wake_time, pdMS_TO_TICKS(950)); // 1 second interval with some margin
-    }
-}
-
 static bool can_driver_init()
 {
     twai_mode_t mode = CAN_MODE;
@@ -93,15 +80,6 @@ static bool should_accept_transfer(
     (void)ins;
     (void)source_node_id;
 
-    if (transfer_type == CanardTransferTypeBroadcast)
-    {
-        if (data_type_id == UAVCAN_NODE_STATUS_ID)
-        {
-            *out_data_type_signature = UAVCAN_NODE_STATUS_SIGNATURE;
-            return true;
-        }
-    }
-
     if (transfer_type == CanardTransferTypeRequest)
     {
         if (data_type_id == UAVCAN_GET_NODE_INFO_ID)
@@ -162,7 +140,7 @@ static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer
     }
 }
 
-static void dronecan_spin(void)
+void dronecan_spin()
 {
     xSemaphoreTake(g_canard_mutex, portMAX_DELAY);
 
@@ -190,18 +168,7 @@ static void dronecan_spin(void)
     xSemaphoreGive(g_canard_mutex);
 }
 
-static void dronecan_spin_task(void *arg)
-{
-    ESP_LOGI("Main", "Spin task started");
-
-    while (1)
-    {
-        dronecan_spin();
-        vTaskDelay(pdMS_TO_TICKS(CAN_READ_TIMEOUT_MS));
-    }
-}
-
-static void dronecan_init()
+void dronecan_init()
 {
     ESP_LOGI(TAG, "Initializing DroneCAN node...");
 
@@ -226,41 +193,6 @@ static void dronecan_init()
     ESP_LOGI(TAG, "DroneCAN initialized with Node ID: %d", DRONECAN_NODE_ID);
 }
 
-void init_app(TaskFunction_t app_task)
-{
-    ESP_LOGI("Main", "========================================");
-    ESP_LOGI("Main", "DroneCAN Node Starting...");
-    ESP_LOGI("Main", "========================================");
-
-    dronecan_init();
-
-    xTaskCreate(
-        dronecan_spin_task,
-        "dronecan_spin", // read, write, dronecan operator
-        4096,
-        NULL,
-        10,
-        NULL);
-
-    xTaskCreate(
-        heartbeat_task,
-        "dronecan_heartbeat",
-        2048,
-        NULL,
-        5,
-        NULL);
-
-    xTaskCreate(
-        app_task,
-        "app_task",
-        2048,
-        NULL,
-        3,
-        NULL);
-
-    ESP_LOGI("Main", "All tasks created successfully");
-}
-
 void set_node_health(uint8_t new_health)
 {
     node_health = new_health;
@@ -271,28 +203,14 @@ void set_node_mode(uint8_t new_mode)
     node_mode = new_mode;
 }
 
-void dronecan_publish_node_status(void) // TODO check if this is full and correct
+uint8_t *get_node_health()
 {
-    static uint8_t transfer_id = 0;
-    uint32_t uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
-    uint8_t buffer[7];
+    return &node_health;
+}
 
-    buffer[0] = uptime;
-    buffer[1] = uptime >> 8;
-    buffer[2] = uptime >> 16;
-    buffer[3] = uptime >> 24;
-
-    buffer[4] = (node_health << 6) | (node_mode << 3);
-
-    buffer[5] = 0;
-    buffer[6] = 0;
-
-    dronecan_broadcast(UAVCAN_NODE_STATUS_SIGNATURE,
-                       UAVCAN_NODE_STATUS_ID,
-                       CANARD_TRANSFER_PRIORITY_LOW,
-                       buffer,
-                       sizeof(buffer),
-                       &transfer_id);
+uint8_t *get_node_mode()
+{
+    return &node_mode;
 }
 
 bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len, uint8_t *transfer_id)
@@ -319,13 +237,12 @@ bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, 
     return true;
 }
 
-// TODO node should not be initialized until it gets ID, and main APP should not do anything until then - no sending pressure
 // TODO move all messages out of node;
-// TODO make main.c contain only app task, everything else should be outsourced to shared
-// TODO parameter getters and setters;
 // TODO restart
-// TODO FW updater
-// TODO rewrite to a library style, main.c show then have only app task.
+// TODO parameter getters and setters;
 // TODO vendor specific code, software version, hw version, cert of authenticity
-// TODO dronecan.uavcan.protocol.gettransportstats
+// TODO node should not be initialized until it gets ID, and main APP should not do anything until then - no sending pressure
+// TODO rewrite to a library style, main.c show then have only app task.
 // TODO turn off wifi and bluetooth and everything not needed for the node to save power
+// TODO dronecan.uavcan.protocol.gettransportstats
+// TODO FW updater

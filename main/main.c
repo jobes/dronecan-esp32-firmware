@@ -1,11 +1,7 @@
-#include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "app_tasks.h"
 #include "esp_log.h"
-#include "dronecan_node.h"
-#include "driver/gpio.h"
+
 #include "bmp390.h"
-#include "bmp3.h"
 #include "messages/uavcan.equipment.air_data.StaticPressure-1028.h"
 #include "messages/uavcan.equipment.air_data.StaticTemperature-1029.h"
 

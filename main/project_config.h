@@ -10,6 +10,7 @@
 #define UNIQUE_NAME "ESP32C3_DroneCAN"
 #define CAN_READ_TIMEOUT_MS 10
 #define DRONECAN_MEM_POOL_SIZE 4096
+#define DRONECAN_HEARTBEAT_INTERVAL_MS 950 // 1 second interval with some margin
 
 // BMP390
 #define BMP_MISO GPIO_NUM_5

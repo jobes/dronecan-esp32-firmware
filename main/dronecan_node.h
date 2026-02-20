@@ -8,9 +8,6 @@
 
 #define DRONECAN_NODE_ID 42
 
-#define UAVCAN_NODE_STATUS_ID 341
-#define UAVCAN_NODE_STATUS_SIGNATURE 0x0F0868D0C1A7C6F1ULL
-
 #define UAVCAN_GET_NODE_INFO_ID 1
 #define UAVCAN_GET_NODE_INFO_SIGNATURE 0xEE468A8121C46A9EULL
 
@@ -31,10 +28,14 @@ typedef enum
     MODE_OFFLINE = 7
 } NodeMode;
 
-void init_app(TaskFunction_t app_task);
+void dronecan_spin(void);
+void dronecan_init();
+
 void set_node_health(uint8_t new_health);
 void set_node_mode(uint8_t new_mode);
-void dronecan_publish_node_status(void);
+uint8_t *get_node_health(void);
+uint8_t *get_node_mode(void);
+
 bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len, uint8_t *transfer_id);
 
 #endif
