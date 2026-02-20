@@ -14,6 +14,8 @@ static CanardInstance g_canard;
 static uint8_t g_canard_memory_pool[DRONECAN_MEM_POOL_SIZE];
 
 static SemaphoreHandle_t g_canard_mutex;
+static uint8_t node_health = HEALTH_OK;
+static uint8_t node_mode = MODE_INITIALIZATION;
 
 static bool can_driver_init()
 {
@@ -114,7 +116,7 @@ static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer
         response[1] = uptime >> 8;
         response[2] = uptime >> 16;
         response[3] = uptime >> 24;
-        response[4] = (HEALTH_OK << 6) | MODE_OPERATIONAL;
+        response[4] = (node_health << 6) | (node_mode << 3);
         response[5] = 0;
         response[6] = 0;
 
@@ -145,6 +147,16 @@ static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer
     }
 }
 
+void set_node_health(uint8_t new_health)
+{
+    node_health = new_health;
+}
+
+void set_node_mode(uint8_t new_mode)
+{
+    node_mode = new_mode;
+}
+
 void dronecan_init()
 {
     ESP_LOGI(TAG, "Initializing DroneCAN node...");
@@ -170,7 +182,7 @@ void dronecan_init()
     ESP_LOGI(TAG, "DroneCAN initialized with Node ID: %d", DRONECAN_NODE_ID);
 }
 
-void dronecan_publish_node_status(void)
+void dronecan_publish_node_status(void) // TODO check if this is full and correct
 {
     uint32_t uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
     uint8_t buffer[7];
@@ -180,7 +192,7 @@ void dronecan_publish_node_status(void)
     buffer[2] = uptime >> 16;
     buffer[3] = uptime >> 24;
 
-    buffer[4] = (HEALTH_OK << 6) | (MODE_OPERATIONAL << 3);
+    buffer[4] = (node_health << 6) | (node_mode << 3);
 
     buffer[5] = 0;
     buffer[6] = 0;
@@ -192,7 +204,7 @@ void dronecan_publish_node_status(void)
                        sizeof(buffer));
 }
 
-bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len)
+bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len) // TODO check if this is full and correct
 {
 
     xSemaphoreTake(g_canard_mutex, portMAX_DELAY);

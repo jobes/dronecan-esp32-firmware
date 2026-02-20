@@ -1,3 +1,6 @@
 [submodule "submodules/libcanard"]
 	path = submodules/libcanard
 	url = https://github.com/DroneCAN/libcanard
+[submodule "submodules/bmp3_sensor_api"]
+	path = submodules/bmp3_sensor_api
+	url = https://github.com/boschsensortec/BMP3_SensorAPI

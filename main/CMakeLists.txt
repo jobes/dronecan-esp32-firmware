@@ -8,6 +8,7 @@ idf_component_register(
         "driver"
         "esp_timer"
         "libcanard"
+        "bmp3_sensor_api"
 )
 
 target_compile_options(${COMPONENT_LIB} PRIVATE "-include" "${CMAKE_CURRENT_LIST_DIR}/project_config.h")

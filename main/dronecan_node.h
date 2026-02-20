@@ -30,6 +30,8 @@ typedef enum
     MODE_OFFLINE = 7
 } NodeMode;
 
+void set_node_health(uint8_t new_health);
+void set_node_mode(uint8_t new_mode);
 void dronecan_init();
 void dronecan_spin(void);
 void dronecan_publish_node_status(void);
