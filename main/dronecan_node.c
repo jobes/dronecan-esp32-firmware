@@ -8,6 +8,8 @@
 #include <string.h>
 #include "esp_mac.h"
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"
+#include "messages/uavcan.protocol.RestartNode-5.h"
+#include "esp_system.h"
 
 static const char *TAG = "DroneCAN";
 
@@ -82,9 +84,13 @@ static bool should_accept_transfer(
 
     if (transfer_type == CanardTransferTypeRequest)
     {
-        if (data_type_id == UAVCAN_GET_NODE_INFO_ID)
+        switch (data_type_id)
         {
+        case UAVCAN_GET_NODE_INFO_ID:
             *out_data_type_signature = UAVCAN_GET_NODE_INFO_SIGNATURE;
+            return true;
+        case UAVCAN_RESTART_NODE_ID:
+            *out_data_type_signature = UAVCAN_RESTART_NODE_SIGNATURE;
             return true;
         }
     }
@@ -94,10 +100,24 @@ static bool should_accept_transfer(
 
 static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
 {
-    if (transfer->transfer_type == CanardTransferTypeRequest &&
-        transfer->data_type_id == UAVCAN_GET_NODE_INFO_ID)
+    if (transfer->transfer_type == CanardTransferTypeRequest)
     {
-        response_1_getNodeInfo(transfer->source_node_id, &transfer->transfer_id);
+        switch (transfer->data_type_id)
+        {
+        case UAVCAN_GET_NODE_INFO_ID:
+            response_1_getNodeInfo(transfer->source_node_id, &transfer->transfer_id);
+            break;
+        case UAVCAN_RESTART_NODE_ID:
+            if (check_response_5_restart_transfer_valid(transfer))
+            {
+                response_5_restartNode(transfer->source_node_id, &transfer->transfer_id);
+                vTaskDelay(pdMS_TO_TICKS(100)); // Give some time for the response to be sent before restarting
+                esp_restart();
+            }
+            break;
+        default:
+            break;
+        }
     }
 }
 
@@ -219,10 +239,7 @@ bool dronecan_respond(uint8_t destination_node_id, uint8_t *inout_transfer_id, u
     return true;
 }
 
-// TODO move all messages out of node;
-// TODO restart
 // TODO parameter getters and setters;
-// TODO vendor specific code, software version, hw version, cert of authenticity
 // TODO node should not be initialized until it gets ID, and main APP should not do anything until then - no sending pressure
 // TODO rewrite to a library style, main.c show then have only app task.
 // TODO turn off wifi and bluetooth and everything not needed for the node to save power
