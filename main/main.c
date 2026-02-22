@@ -27,7 +27,7 @@ static void main_task(void *arg)
             _Float16 pressure_variance_pa2 = 100.0f; // 0.8 meters variance
             _Float16 temperature_variance_c2 = 1.0f; // 1 degrees Celsius variance
 
-                        bool pressure_publish_ok = publish_1028_staticPressure((_Float32)data.pressure + get_device_parameters()[0].Float.value, pressure_variance_pa2);
+            bool pressure_publish_ok = publish_1028_staticPressure((_Float32)data.pressure + get_device_parameters()[0].Float.value, pressure_variance_pa2);
             bool temperature_publish_ok = publish_1029_staticTemperatureCelsius((_Float16)data.temperature + get_device_parameters()[1].Float.value, temperature_variance_c2);
 
             if (pressure_publish_ok && temperature_publish_ok)

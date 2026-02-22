@@ -11,6 +11,7 @@
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"
 #include "messages/uavcan.protocol.RestartNode-5.h"
 #include "messages/uavcan.protocol.param.GetSet-11.h"
+#include "messages/uavcan.protocol.param.ExecuteOpcode.h"
 #include "helpers/dronecan_value_params.h"
 
 static const char *TAG = "DroneCAN";
@@ -97,6 +98,9 @@ static bool should_accept_transfer(
         case UAVCAN_PARAM_GETSET_ID:
             *out_data_type_signature = UAVCAN_PARAM_GETSET_SIGNATURE;
             return true;
+        case UAVCAN_PROTOCOL_PARAM_EXECUTE_OPCODE_ID:
+            *out_data_type_signature = UAVCAN_PROTOCOL_PARAM_EXECUTE_OPCODE_SIGNATURE;
+            return true;
         }
     }
 
@@ -131,6 +135,9 @@ static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer
             {
                 response_11_paramGetSetEmpty(transfer->source_node_id, &transfer->transfer_id);
             }
+            break;
+        case UAVCAN_PROTOCOL_PARAM_EXECUTE_OPCODE_ID:
+            response_10_paramExecuteOpcode_process(transfer);
             break;
         default:
             break;
@@ -256,7 +263,6 @@ bool dronecan_respond(uint8_t destination_node_id, uint8_t *inout_transfer_id, u
     return true;
 }
 
-// TODO parameter getters and setters save/erase; uavcan.protocol.param.ExecuteOpcode
 // TODO node should not be initialized until it gets ID, and main APP should not do anything until then - no sending pressure
 // TODO rewrite to a library style, main.c show then have only app task.
 // TODO turn off wifi and bluetooth and everything not needed for the node to save power
@@ -264,3 +270,4 @@ bool dronecan_respond(uint8_t destination_node_id, uint8_t *inout_transfer_id, u
 // TODO FW updater
 // TODO remove all non needed static (move to .C)
 // TODO rewrite restart so it really send message before restart, now it just wait and restart without guarantee that message is sent
+// TODO change mac to something longer

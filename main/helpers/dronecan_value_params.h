@@ -65,5 +65,7 @@ ParamChangedFunction get_param_changed_callback();
 void set_device_parameters(union DeviceParameter *device_parameters, uint16_t device_parameters_len);
 union DeviceParameter *get_device_parameters();
 uint16_t get_device_parameters_len();
+bool save_parameters_to_nvs();
+bool erase_parameters_from_nvs();
 
 #endif // DRONECAN_VALUE_PARAMS_H
