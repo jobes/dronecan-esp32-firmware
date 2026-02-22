@@ -4,6 +4,7 @@
 
 static union DeviceParameter *singleton_device_parameters = 0;
 static uint16_t singleton_device_parameters_len = 0;
+static ParamChangedFunction param_changed_callback = 0;
 
 void set_device_parameters(union DeviceParameter *device_parameters, uint16_t device_parameters_len)
 {
@@ -24,4 +25,14 @@ union DeviceParameter *get_device_parameters()
 uint16_t get_device_parameters_len()
 {
     return singleton_device_parameters_len;
+}
+
+void set_param_changed_callback(ParamChangedFunction callback)
+{
+    param_changed_callback = callback;
+}
+
+ParamChangedFunction get_param_changed_callback()
+{
+    return param_changed_callback;
 }

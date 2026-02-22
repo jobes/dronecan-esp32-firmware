@@ -276,6 +276,10 @@ static uint16_t set_parameter_value(CanardRxTransfer *transfer, uint16_t name_st
             if (value != NULL)
             {
                 set_value(parameter, value);
+                if (get_param_changed_callback() != NULL)
+                {
+                    get_param_changed_callback()(i);
+                }
             }
             return i;
         }

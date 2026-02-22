@@ -17,36 +17,36 @@ struct DeviceParameterFloat
 {
     enum DeviceParameterType type;
     char *name;
-    float value;
     float min;
     float max;
     float default_val;
+    float value;
 };
 
 struct DeviceParameterInteger
 {
     enum DeviceParameterType type;
     char *name;
-    int64_t value;
     int64_t min;
     int64_t max;
     int64_t default_val;
+    int64_t value;
 };
 
 struct DeviceParameterBoolean
 {
     enum DeviceParameterType type;
     char *name;
-    uint8_t value;
     uint8_t default_val;
+    uint8_t value;
 };
 
 struct DeviceParameterString
 {
     enum DeviceParameterType type;
     char *name;
-    char *value;
     char *default_val;
+    char *value;
 };
 
 union DeviceParameter
@@ -57,10 +57,13 @@ union DeviceParameter
     struct DeviceParameterString String;
 };
 
+typedef void (*ParamChangedFunction)(uint16_t index);
+
+void set_param_changed_callback(ParamChangedFunction callback);
+ParamChangedFunction get_param_changed_callback();
+
 void set_device_parameters(union DeviceParameter *device_parameters, uint16_t device_parameters_len);
-
 union DeviceParameter *get_device_parameters();
-
 uint16_t get_device_parameters_len();
 
 #endif // DRONECAN_VALUE_PARAMS_H

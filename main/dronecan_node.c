@@ -256,7 +256,7 @@ bool dronecan_respond(uint8_t destination_node_id, uint8_t *inout_transfer_id, u
     return true;
 }
 
-// TODO parameter getters and setters notify main app that value changed; save/erase; uavcan.protocol.param.ExecuteOpcode
+// TODO parameter getters and setters save/erase; uavcan.protocol.param.ExecuteOpcode
 // TODO node should not be initialized until it gets ID, and main APP should not do anything until then - no sending pressure
 // TODO rewrite to a library style, main.c show then have only app task.
 // TODO turn off wifi and bluetooth and everything not needed for the node to save power
