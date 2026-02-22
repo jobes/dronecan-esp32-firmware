@@ -2,6 +2,7 @@
 #include "esp_log.h"
 
 #include "bmp390.h"
+#include "helpers/dronecan_value_params.h"
 #include "messages/uavcan.equipment.air_data.StaticPressure-1028.h"
 #include "messages/uavcan.equipment.air_data.StaticTemperature-1029.h"
 
@@ -57,5 +58,13 @@ static void main_task(void *arg)
 
 void app_main(void)
 {
+    // type; name; value will be loaded from memory so NULL; min; max; default
+    union DeviceParameter device_parameters[] = {// TODO make value at last position so it weill not we written down here
+                                                 {.Float = {DEVICE_PARAM_TYPE_FLOAT, "temp_offset", 0.0, -18.2, 47.3, 3.16}},
+                                                 {.Boolean = {DEVICE_PARAM_TYPE_BOOL, "enable_temperature", 0, 0}},
+                                                 {.String = {DEVICE_PARAM_TYPE_STRING, "password", NULL, "default"}},
+                                                 {.Integer = {DEVICE_PARAM_TYPE_INT, "frequency", 0, -21, 87, 13}}};
+
+    set_device_parameters(device_parameters, ARRAY_SIZE(device_parameters));
     init_app(main_task);
 }

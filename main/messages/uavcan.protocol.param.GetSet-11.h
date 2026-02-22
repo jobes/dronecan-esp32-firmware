@@ -105,6 +105,32 @@ static char *name_value(union DeviceParameter *param)
     }
 }
 
+static void set_value(union DeviceParameter *param, void *value)
+{
+    switch (type_of_values(param))
+    {
+    case DEVICE_PARAM_TYPE_INT:
+        param->Integer.value = *(int64_t *)value;
+        break;
+    case DEVICE_PARAM_TYPE_FLOAT:
+        param->Float.value = *(float *)value;
+        break;
+    case DEVICE_PARAM_TYPE_BOOL:
+        param->Boolean.value = *(uint8_t *)value;
+        break;
+    case DEVICE_PARAM_TYPE_STRING:
+        if (param->String.value != NULL)
+        {
+            free(param->String.value);
+        }
+        param->String.value = malloc(strlen((char *)value) + 1);
+        strcpy(param->String.value, (char *)value);
+        break;
+    default:
+        break;
+    }
+}
+
 // return size in bits of filled data
 static uint16_t setNumericValue(void *destination, uint32_t bit_offset, uint16_t type, void *value)
 {
@@ -229,6 +255,82 @@ bool response_11_paramGetSetEmpty(uint8_t destination_node_id, uint8_t *inout_tr
                             CANARD_TRANSFER_PRIORITY_LOW,
                             buffer,
                             sizeof(buffer));
+}
+
+static uint16_t set_parameter_value(CanardRxTransfer *transfer, uint16_t name_start, void *value)
+{
+    // get name
+    char name[transfer->payload_len - name_start / 8 + 1];
+
+    for (int i = 0; i < transfer->payload_len - name_start / 8; i++)
+    {
+        canardDecodeScalar(transfer, name_start + i * 8, 8, false, &name[i]);
+    }
+    name[transfer->payload_len - name_start / 8] = '\0';
+    // find parameter and set value
+    for (int i = 0; i < get_device_parameters_len(); i++)
+    {
+        union DeviceParameter *parameter = &get_device_parameters()[i];
+        if (strcmp(name_value(parameter), name) == 0)
+        {
+            if (value != NULL)
+            {
+                set_value(parameter, value);
+            }
+            return i;
+        }
+    }
+    return -1;
+}
+
+// for requested parameter return index, if value sent save it to parameter
+uint16_t decode_11_paramGetSet_request(CanardRxTransfer *transfer)
+{
+    uint16_t param_index = 0;
+    canardDecodeScalar(transfer, 0, 13, false, &param_index);
+    uint8_t value_type;
+    canardDecodeScalar(transfer, 13, 3, false, &value_type);
+    uint16_t offset = 16; // index + value type
+
+    if (value_type == DEVICE_PARAM_TYPE_EMPTY)
+    {
+        if (transfer->payload_len * 8 > offset) // if there is value in transfer, set it, otherwise just return index
+        {
+            return set_parameter_value(transfer, offset, NULL);
+        }
+        return param_index;
+    }
+    else if (value_type == DEVICE_PARAM_TYPE_INT || value_type == DEVICE_PARAM_TYPE_FLOAT || value_type == DEVICE_PARAM_TYPE_BOOL)
+    {
+        uint64_t int_value;
+        canardDecodeScalar(transfer, offset, 64, true, &int_value);
+        switch (value_type)
+        {
+        case DEVICE_PARAM_TYPE_INT:
+            return set_parameter_value(transfer, offset + 64, &int_value);
+        case DEVICE_PARAM_TYPE_FLOAT:
+            return set_parameter_value(transfer, offset + 32, &int_value);
+        case DEVICE_PARAM_TYPE_BOOL:
+            return set_parameter_value(transfer, offset + 8, &int_value);
+        default:
+            return -1;
+        }
+    }
+    else if (value_type == DEVICE_PARAM_TYPE_STRING)
+    {
+        uint8_t strlength;
+        canardDecodeScalar(transfer, offset, 8, false, &strlength);
+        offset += 8;
+        char str_value[strlength + 1];
+        for (int i = 0; i < strlength; i++)
+        {
+            canardDecodeScalar(transfer, offset, 8, false, &str_value[i]);
+            offset += 8;
+        }
+        str_value[strlength] = '\0';
+        return set_parameter_value(transfer, offset, str_value);
+    }
+    return -1; // unknown type
 }
 
 #endif // UAVCAN_PROTOCOL_PARAM_GETSET_11_H

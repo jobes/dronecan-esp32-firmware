@@ -22,13 +22,6 @@ static SemaphoreHandle_t g_canard_mutex;
 static uint8_t node_health = HEALTH_OK;
 static uint8_t node_mode = MODE_INITIALIZATION;
 
-union DeviceParameter device_parameters[] = {
-    {.Float = {DEVICE_PARAM_TYPE_FLOAT, "temp_offset", 2.4, -18.2, 47.3, 3.16}},
-    {.Boolean = {DEVICE_PARAM_TYPE_BOOL, "enable_temperature", 1, 0}},
-    {.String = {DEVICE_PARAM_TYPE_STRING, "password", "current", "default"}},
-    {.Integer = {DEVICE_PARAM_TYPE_INT, "frequency", 48, -21, 87, 13}}};
-uint8_t device_parameters_len = ARRAY_SIZE(device_parameters);
-
 static bool can_driver_init()
 {
     twai_mode_t mode = CAN_MODE;
@@ -128,12 +121,11 @@ static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer
             }
             break;
         case UAVCAN_PARAM_GETSET_ID:
-            uint16_t param_index = 0;
-            canardDecodeScalar(transfer, 0, 13, false, &param_index);
-            ESP_LOGI("GETSET", "index %d", param_index);
-            if (param_index < device_parameters_len)
+            uint16_t param_index = decode_11_paramGetSet_request(transfer);
+
+            if (param_index < get_device_parameters_len())
             {
-                response_11_paramGetSet(transfer->source_node_id, &transfer->transfer_id, &device_parameters[param_index]);
+                response_11_paramGetSet(transfer->source_node_id, &transfer->transfer_id, &get_device_parameters()[param_index]);
             }
             else
             {
@@ -264,9 +256,11 @@ bool dronecan_respond(uint8_t destination_node_id, uint8_t *inout_transfer_id, u
     return true;
 }
 
-// TODO parameter getters and setters; uavcan.protocol.param.ExecuteOpcode and uavcan.protocol.param.GetSet
+// TODO parameter getters and setters notify main app that value changed; save/erase; uavcan.protocol.param.ExecuteOpcode
 // TODO node should not be initialized until it gets ID, and main APP should not do anything until then - no sending pressure
 // TODO rewrite to a library style, main.c show then have only app task.
 // TODO turn off wifi and bluetooth and everything not needed for the node to save power
 // TODO dronecan.uavcan.protocol.gettransportstats
 // TODO FW updater
+// TODO remove all non needed static (move to .C)
+// TODO rewrite restart so it really send message before restart, now it just wait and restart without guarantee that message is sent

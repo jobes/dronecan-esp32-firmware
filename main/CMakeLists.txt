@@ -3,6 +3,7 @@ idf_component_register(
         "main.c" 
         "dronecan_node.c"
         "app_tasks.c"
+        "helpers/dronecan_value_params.c"
     INCLUDE_DIRS 
         "."
     REQUIRES 
@@ -10,6 +11,7 @@ idf_component_register(
         "esp_timer"
         "libcanard"
         "bmp3_sensor_api"
+        "nvs_flash"
 )
 
 target_compile_options(${COMPONENT_LIB} PRIVATE "-include" "${CMAKE_CURRENT_LIST_DIR}/project_config.h")

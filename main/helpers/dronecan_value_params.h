@@ -2,6 +2,9 @@
 #define DRONECAN_VALUE_PARAMS_H
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
+#include <stdint.h>
+#include <stdbool.h>
+
 enum DeviceParameterType
 {
     DEVICE_PARAM_TYPE_EMPTY = 0,
@@ -53,5 +56,11 @@ union DeviceParameter
     struct DeviceParameterBoolean Boolean;
     struct DeviceParameterString String;
 };
+
+void set_device_parameters(union DeviceParameter *device_parameters, uint16_t device_parameters_len);
+
+union DeviceParameter *get_device_parameters();
+
+uint16_t get_device_parameters_len();
 
 #endif // DRONECAN_VALUE_PARAMS_H
