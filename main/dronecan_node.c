@@ -2,6 +2,7 @@
 #include "canard.h"
 #include "driver/twai.h"
 #include "esp_log.h"
+#include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
@@ -9,7 +10,8 @@
 #include "esp_mac.h"
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"
 #include "messages/uavcan.protocol.RestartNode-5.h"
-#include "esp_system.h"
+#include "messages/uavcan.protocol.param.GetSet-11.h"
+#include "helpers/dronecan_value_params.h"
 
 static const char *TAG = "DroneCAN";
 
@@ -19,6 +21,13 @@ static uint8_t g_canard_memory_pool[DRONECAN_MEM_POOL_SIZE];
 static SemaphoreHandle_t g_canard_mutex;
 static uint8_t node_health = HEALTH_OK;
 static uint8_t node_mode = MODE_INITIALIZATION;
+
+union DeviceParameter device_parameters[] = {
+    {.Float = {DEVICE_PARAM_TYPE_FLOAT, "temp_offset", 2.4, -18.2, 47.3, 3.16}},
+    {.Boolean = {DEVICE_PARAM_TYPE_BOOL, "enable_temperature", 1, 0}},
+    {.String = {DEVICE_PARAM_TYPE_STRING, "password", "current", "default"}},
+    {.Integer = {DEVICE_PARAM_TYPE_INT, "frequency", 48, -21, 87, 13}}};
+uint8_t device_parameters_len = ARRAY_SIZE(device_parameters);
 
 static bool can_driver_init()
 {
@@ -92,6 +101,9 @@ static bool should_accept_transfer(
         case UAVCAN_RESTART_NODE_ID:
             *out_data_type_signature = UAVCAN_RESTART_NODE_SIGNATURE;
             return true;
+        case UAVCAN_PARAM_GETSET_ID:
+            *out_data_type_signature = UAVCAN_PARAM_GETSET_SIGNATURE;
+            return true;
         }
     }
 
@@ -113,6 +125,19 @@ static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer
                 response_5_restartNode(transfer->source_node_id, &transfer->transfer_id);
                 vTaskDelay(pdMS_TO_TICKS(100)); // Give some time for the response to be sent before restarting
                 esp_restart();
+            }
+            break;
+        case UAVCAN_PARAM_GETSET_ID:
+            uint16_t param_index = 0;
+            canardDecodeScalar(transfer, 0, 13, false, &param_index);
+            ESP_LOGI("GETSET", "index %d", param_index);
+            if (param_index < device_parameters_len)
+            {
+                response_11_paramGetSet(transfer->source_node_id, &transfer->transfer_id, &device_parameters[param_index]);
+            }
+            else
+            {
+                response_11_paramGetSetEmpty(transfer->source_node_id, &transfer->transfer_id);
             }
             break;
         default:
@@ -239,7 +264,7 @@ bool dronecan_respond(uint8_t destination_node_id, uint8_t *inout_transfer_id, u
     return true;
 }
 
-// TODO parameter getters and setters;
+// TODO parameter getters and setters; uavcan.protocol.param.ExecuteOpcode and uavcan.protocol.param.GetSet
 // TODO node should not be initialized until it gets ID, and main APP should not do anything until then - no sending pressure
 // TODO rewrite to a library style, main.c show then have only app task.
 // TODO turn off wifi and bluetooth and everything not needed for the node to save power
