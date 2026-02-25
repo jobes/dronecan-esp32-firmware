@@ -12,6 +12,7 @@ idf_component_register(
         "libcanard"
         "bmp3_sensor_api"
         "nvs_flash"
+        "app_update"
 )
 
 target_compile_options(${COMPONENT_LIB} PRIVATE "-include" "${CMAKE_CURRENT_LIST_DIR}/project_config.h")

@@ -11,7 +11,9 @@
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"
 #include "messages/uavcan.protocol.RestartNode-5.h"
 #include "messages/uavcan.protocol.param.GetSet-11.h"
-#include "messages/uavcan.protocol.param.ExecuteOpcode.h"
+#include "messages/uavcan.protocol.param.ExecuteOpcode-10.h"
+#include "messages/uavcan.protocol.file.BeginFirmwareUpdate-40.h"
+#include "messages/uavcan.protocol.file.Read-48.h"
 #include "helpers/dronecan_value_params.h"
 
 static const char *TAG = "DroneCAN";
@@ -29,6 +31,7 @@ static bool can_driver_init()
     twai_timing_config_t t_config = CAN_SPEED();
     twai_filter_config_t f_config = CAN_CONFIG();
     twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, mode);
+    g_config.rx_queue_len = 128;
 
     if (twai_driver_install(&g_config, &t_config, &f_config) != ESP_OK)
     {
@@ -101,9 +104,20 @@ static bool should_accept_transfer(
         case UAVCAN_PROTOCOL_PARAM_EXECUTE_OPCODE_ID:
             *out_data_type_signature = UAVCAN_PROTOCOL_PARAM_EXECUTE_OPCODE_SIGNATURE;
             return true;
+        case UAVCAN_FILE_BEGIN_FIRMWARE_UPDATE_ID:
+            *out_data_type_signature = UAVCAN_FILE_BEGIN_FIRMWARE_UPDATE_SIGNATURE;
+            return true;
         }
     }
-
+    else if (transfer_type == CanardTransferTypeResponse)
+    {
+        switch (data_type_id)
+        {
+        case UAVCAN_FILE_READ_ID:
+            *out_data_type_signature = UAVCAN_FILE_READ_SIGNATURE;
+            return true;
+        }
+    }
     return false;
 }
 
@@ -139,7 +153,42 @@ static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer
         case UAVCAN_PROTOCOL_PARAM_EXECUTE_OPCODE_ID:
             response_10_paramExecuteOpcode_process(transfer);
             break;
+        case UAVCAN_FILE_BEGIN_FIRMWARE_UPDATE_ID:
+            if (node_mode == MODE_SOFTWARE_UPDATE)
+            {
+                response_40_beginFirmwareUpdate(IN_PROGRESS, transfer->source_node_id, &transfer->transfer_id);
+                break;
+            }
+            node_mode = MODE_SOFTWARE_UPDATE;
+            if (process_40_beginFirmwareUpdate(transfer))
+            {
+                response_40_beginFirmwareUpdate(OK, transfer->source_node_id, &transfer->transfer_id);
+                request_read_48(firmware_source_node_id, 0, firmware_path);
+            }
+            else
+            {
+                response_40_beginFirmwareUpdate(INVALID_MODE, transfer->source_node_id, &transfer->transfer_id);
+            }
+
+            break;
         default:
+            ESP_LOGW(TAG, "UNKNOWN TRANSFER RECEIVED: type_id=%d, source_node_id=%d", transfer->data_type_id, transfer->source_node_id);
+            break;
+        }
+    }
+    else if (transfer->transfer_type == CanardTransferTypeResponse)
+    {
+        switch (transfer->data_type_id)
+        {
+        case UAVCAN_FILE_READ_ID:
+            if (node_mode == MODE_SOFTWARE_UPDATE)
+            {
+                firmware_file_chunk_received(transfer);
+            }
+
+            break;
+        default:
+            ESP_LOGW(TAG, "UNKNOWN RESPONSE RECEIVED: type_id=%d, source_node_id=%d", transfer->data_type_id, transfer->source_node_id);
             break;
         }
     }
@@ -263,11 +312,31 @@ bool dronecan_respond(uint8_t destination_node_id, uint8_t *inout_transfer_id, u
     return true;
 }
 
+bool dronecan_request(uint8_t destination_node_id, uint8_t *inout_transfer_id, uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len)
+{
+    int16_t result = canardRequestOrRespond(&g_canard,
+                                            destination_node_id,
+                                            signature,
+                                            type_id,
+                                            inout_transfer_id,
+                                            priority,
+                                            CanardRequest,
+                                            payload,
+                                            len);
+
+    if (result <= 0)
+    {
+        ESP_LOGE(TAG, "Respond failed: %d", result);
+        return false;
+    }
+
+    return true;
+}
+
 // TODO node should not be initialized until it gets ID, and main APP should not do anything until then - no sending pressure
+// TODO can bus firmware update rollback when don't get node ID.
 // TODO rewrite to a library style, main.c show then have only app task.
-// TODO turn off wifi and bluetooth and everything not needed for the node to save power
 // TODO dronecan.uavcan.protocol.gettransportstats
-// TODO FW updater
 // TODO remove all non needed static (move to .C)
 // TODO rewrite restart so it really send message before restart, now it just wait and restart without guarantee that message is sent
 // TODO change mac to something longer
