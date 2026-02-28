@@ -32,6 +32,7 @@ void set_node_health(uint8_t new_health);
 void set_node_mode(uint8_t new_mode);
 uint8_t *get_node_health(void);
 uint8_t *get_node_mode(void);
+void get_node_id(void);
 
 bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len, uint8_t *transfer_id);
 bool dronecan_respond(uint8_t destination_node_id, uint8_t *inout_transfer_id, uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len);

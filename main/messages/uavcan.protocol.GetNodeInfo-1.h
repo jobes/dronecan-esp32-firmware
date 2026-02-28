@@ -8,6 +8,20 @@
 #define UAVCAN_GET_NODE_INFO_ID 1
 #define UAVCAN_GET_NODE_INFO_SIGNATURE 0xEE468A8121C46A9EULL
 
+static char UNIQUE_ID[17] = "INSKYCORE_";
+
+void init_unique_id()
+{
+    esp_read_mac((uint8_t *)&UNIQUE_ID[10], ESP_MAC_WIFI_STA);
+    UNIQUE_ID[16] = '\0';
+    ESP_LOGI("GET_NODE", "Unique ID: %s", UNIQUE_ID);
+}
+
+char *get_unique_id()
+{
+    return UNIQUE_ID;
+}
+
 /*
     msg name: uavcan.protocol.GetNodeInfo
     msg ID: 1
@@ -19,8 +33,6 @@ bool response_1_getNodeInfo(uint8_t destination_node_id, uint8_t *inout_transfer
     uint8_t minor_sw_version = MINOR_SW_VERSION;
     uint8_t major_hw_version = MAJOR_HW_VERSION;
     uint8_t minor_hw_version = MINOR_HW_VERSION;
-    uint8_t mac[6];
-    esp_read_mac(mac, ESP_MAC_WIFI_STA);
     char name[] = DEVICE_NAME;
     uint8_t name_len = DEVICE_NAME_LEN;
 
@@ -47,7 +59,7 @@ bool response_1_getNodeInfo(uint8_t destination_node_id, uint8_t *inout_transfer
     offset += 8;
     canardEncodeScalar(buffer, offset, 8, &minor_hw_version);
     offset += 8;
-    canardEncodeScalar(buffer, offset, 6 * 8, &mac);
+    canardEncodeScalar(buffer, offset, 16 * 8, get_unique_id());
     offset = (7 + 15 + 18 + 1) * 8; // align to next byte, should be 320
 
     // Name

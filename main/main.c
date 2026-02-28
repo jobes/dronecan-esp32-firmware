@@ -17,10 +17,19 @@ static void main_task(void *arg)
         vTaskDelete(NULL);
     }
 
-    set_node_mode(MODE_OPERATIONAL);
+    if (*get_node_mode() == MODE_INITIALIZATION)
+    {
+        set_node_mode(MODE_OPERATIONAL);
+    }
 
     while (1)
     {
+        if (*get_node_mode() != MODE_OPERATIONAL)
+        {
+            ESP_LOGW(TAG, "Node is not in operational mode, skipping sensor read and publish");
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            continue;
+        }
         struct bmp3_data data;
         if (bmp390_get_data(&data) == BMP3_OK)
         {

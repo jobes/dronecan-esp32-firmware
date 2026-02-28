@@ -43,6 +43,9 @@ void init_app(TaskFunction_t app_task)
         10,
         NULL);
 
+    get_node_id();
+
+    // after we got node ID, we can start other tasks, for example heartbeat and app task
     xTaskCreate(
         heartbeat_task,
         "dronecan_heartbeat",
