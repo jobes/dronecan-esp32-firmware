@@ -16,6 +16,7 @@
 #include "messages/uavcan.protocol.file.BeginFirmwareUpdate-40.h"
 #include "messages/uavcan.protocol.file.Read-48.h"
 #include "messages/uavcan.protocol.dynamic_node_id.Allocation-1.h"
+#include "messages/uavcan.protocol.GetTransportStats-4.h"
 #include "helpers/dronecan_value_params.h"
 
 static const char *TAG = "DroneCAN";
@@ -62,6 +63,10 @@ static bool can_transmit(const CanardCANFrame *frame)
     memcpy(message.data, frame->data, frame->data_len);
 
     esp_err_t result = twai_transmit(&message, pdMS_TO_TICKS(10));
+    if (result == ESP_OK)
+    {
+        increase_physical_tx();
+    }
     return (result == ESP_OK);
 }
 
@@ -73,6 +78,7 @@ static bool can_receive(CanardCANFrame *frame)
     {
         return false;
     }
+    increase_physical_rx();
 
     frame->id = message.identifier | CANARD_CAN_FRAME_EFF;
     frame->data_len = message.data_length_code;
@@ -118,6 +124,9 @@ static bool should_accept_transfer(
         case UAVCAN_FILE_BEGIN_FIRMWARE_UPDATE_ID:
             *out_data_type_signature = UAVCAN_FILE_BEGIN_FIRMWARE_UPDATE_SIGNATURE;
             return true;
+        case UAVCAN_PROTOCOL_GET_TRANSPORT_STATS_ID:
+            *out_data_type_signature = UAVCAN_PROTOCOL_GET_TRANSPORT_STATS_SIGNATURE;
+            return true;
         }
     }
     else if (transfer_type == CanardTransferTypeResponse)
@@ -134,6 +143,7 @@ static bool should_accept_transfer(
 
 static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
 {
+    increase_logical_rx();
     if (canardGetLocalNodeID(ins) == CANARD_BROADCAST_NODE_ID)
     {
         if (transfer->data_type_id == UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_ID)
@@ -212,6 +222,9 @@ static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer
             }
 
             break;
+        case UAVCAN_PROTOCOL_GET_TRANSPORT_STATS_ID:
+            response_4_getTransportStats(transfer->source_node_id, &transfer->transfer_id);
+            break;
         default:
             ESP_LOGW(TAG, "UNKNOWN TRANSFER RECEIVED: type_id=%d, source_node_id=%d", transfer->data_type_id, transfer->source_node_id);
             break;
@@ -255,7 +268,12 @@ void dronecan_spin()
     CanardCANFrame rx_frame;
     while (can_receive(&rx_frame))
     {
-        canardHandleRxFrame(&g_canard, &rx_frame, xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
+        int16_t result = canardHandleRxFrame(&g_canard, &rx_frame, xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
+        if (result != 0 && result != -CANARD_ERROR_RX_NOT_WANTED)
+        {
+            ESP_LOGI(TAG, "Error handling received frame: %d", result);
+            increase_logical_error();
+        }
     }
 
     canardCleanupStaleTransfers(&g_canard, xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
@@ -374,10 +392,12 @@ bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, 
 
     if (result <= 0)
     {
+        increase_logical_error();
         ESP_LOGE(TAG, "Broadcast failed: %d", result);
         return false;
     }
 
+    increase_logical_tx();
     return true;
 }
 
@@ -395,10 +415,12 @@ bool dronecan_respond(uint8_t destination_node_id, uint8_t *inout_transfer_id, u
 
     if (result <= 0)
     {
+        increase_logical_error();
         ESP_LOGE(TAG, "Respond failed: %d", result);
         return false;
     }
 
+    increase_logical_tx();
     return true;
 }
 
@@ -416,14 +438,15 @@ bool dronecan_request(uint8_t destination_node_id, uint8_t *inout_transfer_id, u
 
     if (result <= 0)
     {
+        increase_logical_error();
         ESP_LOGE(TAG, "Respond failed: %d", result);
         return false;
     }
 
+    increase_logical_tx();
     return true;
 }
 
-// TODO dronecan.uavcan.protocol.gettransportstats
 // TODO rewrite restart so it really send message before restart, now it just wait and restart without guarantee that message is sent
 // TODO rewrite to a library style, main.c show then have only app task.
 // TODO remove all non needed static (move to .C)
