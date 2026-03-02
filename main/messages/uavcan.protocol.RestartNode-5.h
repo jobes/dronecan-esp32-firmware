@@ -21,7 +21,8 @@ bool check_response_5_restart_transfer_valid(const CanardRxTransfer *transfer)
 
 bool response_5_restartNode(uint8_t destination_node_id, uint8_t *inout_transfer_id)
 {
-    uint8_t buffer[1] = {1}; // A single byte indicating that the restart is allowed (1 for allowed, 0 for not allowed)
+    uint8_t buffer[1] = {0};                         // A single byte indicating that the restart is allowed (1 for allowed, 0 for not allowed)
+    canardEncodeScalar(buffer, 0, 1, &(uint8_t){1}); // Set the byte to 1 to indicate that the restart is allowed
 
     return dronecan_respond(destination_node_id,
                             inout_transfer_id,

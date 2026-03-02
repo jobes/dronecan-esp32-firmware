@@ -8,7 +8,7 @@
 #include "freertos/semphr.h"
 #include "esp_random.h"
 #include <string.h>
-#include "esp_mac.h"
+#include "esp_timer.h"
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"
 #include "messages/uavcan.protocol.RestartNode-5.h"
 #include "messages/uavcan.protocol.param.GetSet-11.h"
@@ -141,6 +141,12 @@ static bool should_accept_transfer(
     return false;
 }
 
+static void restart(void *arg)
+{
+    ESP_LOGI(TAG, "Restarting node...");
+    esp_restart();
+}
+
 static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
 {
     increase_logical_rx();
@@ -185,8 +191,10 @@ static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer
             if (check_response_5_restart_transfer_valid(transfer))
             {
                 response_5_restartNode(transfer->source_node_id, &transfer->transfer_id);
-                vTaskDelay(pdMS_TO_TICKS(100)); // Give some time for the response to be sent before restarting
-                esp_restart();
+
+                esp_timer_handle_t timer;
+                esp_timer_create(&(esp_timer_create_args_t){.callback = restart}, &timer);
+                esp_timer_start_once(timer, 1000000);
             }
             break;
         case UAVCAN_PARAM_GETSET_ID:
