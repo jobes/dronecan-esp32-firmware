@@ -423,8 +423,7 @@ bool dronecan_request(uint8_t destination_node_id, uint8_t *inout_transfer_id, u
     return true;
 }
 
-// TODO can bus firmware update rollback when don't get node ID.
-// TODO rewrite to a library style, main.c show then have only app task.
 // TODO dronecan.uavcan.protocol.gettransportstats
-// TODO remove all non needed static (move to .C)
 // TODO rewrite restart so it really send message before restart, now it just wait and restart without guarantee that message is sent
+// TODO rewrite to a library style, main.c show then have only app task.
+// TODO remove all non needed static (move to .C)

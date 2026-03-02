@@ -1,5 +1,6 @@
 #include "app_tasks.h"
 #include "esp_log.h"
+#include "esp_ota_ops.h"
 #include "messages/uavcan.protocol.NodeStatus-341.h"
 #include "helpers/dronecan_value_params.h"
 
@@ -44,6 +45,7 @@ void init_app(TaskFunction_t app_task)
         NULL);
 
     get_node_id();
+    esp_ota_mark_app_valid_cancel_rollback();
 
     // after we got node ID, we can start other tasks, for example heartbeat and app task
     xTaskCreate(
