@@ -3,7 +3,11 @@ idf_component_register(
         "main.c" 
         "dronecan_node.c"
         "app_tasks.c"
+        "helpers/dronecan_communication.c"
+        "helpers/dronecan_node_state.c"
         "helpers/dronecan_value_params.c"
+        "helpers/esp_can.c"
+        "messages/uavcan.protocol.GetNodeInfo-1.c"
     INCLUDE_DIRS 
         "."
     REQUIRES 

@@ -19,39 +19,9 @@
 #include "messages/uavcan.protocol.GetTransportStats-4.h"
 #include "helpers/dronecan_value_params.h"
 
-static const char *TAG = "DroneCAN";
+static const char *TAG = "DroneCAN node";
 
-static CanardInstance g_canard;
-static uint8_t g_canard_memory_pool[DRONECAN_MEM_POOL_SIZE];
-
-static SemaphoreHandle_t g_canard_mutex;
-static uint8_t node_health = HEALTH_OK;
-static uint8_t node_mode = MODE_INITIALIZATION;
 static bool node_id_message_received = false; // another device is trying to allocate node ID, so wait for it to finish before start allocation process
-
-static bool can_driver_init()
-{
-    twai_mode_t mode = CAN_MODE;
-    twai_timing_config_t t_config = CAN_SPEED();
-    twai_filter_config_t f_config = CAN_CONFIG();
-    twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, mode);
-    g_config.rx_queue_len = 128;
-
-    if (twai_driver_install(&g_config, &t_config, &f_config) != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to install TWAI driver");
-        return false;
-    }
-
-    if (twai_start() != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to start TWAI driver");
-        return false;
-    }
-
-    ESP_LOGI(TAG, "CAN driver initialized");
-    return true;
-}
 
 static bool can_transmit(const CanardCANFrame *frame)
 {
@@ -87,7 +57,7 @@ static bool can_receive(CanardCANFrame *frame)
     return true;
 }
 
-static bool should_accept_transfer(
+bool should_accept_transfer(
     const CanardInstance *ins,
     uint64_t *out_data_type_signature,
     uint16_t data_type_id,
@@ -147,7 +117,7 @@ static void restart(void *arg)
     esp_restart();
 }
 
-static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
+void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
 {
     increase_logical_rx();
     if (canardGetLocalNodeID(ins) == CANARD_BROADCAST_NODE_ID)
@@ -213,12 +183,12 @@ static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer
             response_10_paramExecuteOpcode_process(transfer);
             break;
         case UAVCAN_FILE_BEGIN_FIRMWARE_UPDATE_ID:
-            if (node_mode == MODE_SOFTWARE_UPDATE)
+            if (*get_node_mode() == MODE_SOFTWARE_UPDATE)
             {
                 response_40_beginFirmwareUpdate(IN_PROGRESS, transfer->source_node_id, &transfer->transfer_id);
                 break;
             }
-            node_mode = MODE_SOFTWARE_UPDATE;
+            set_node_mode(MODE_SOFTWARE_UPDATE);
             if (process_40_beginFirmwareUpdate(transfer))
             {
                 response_40_beginFirmwareUpdate(OK, transfer->source_node_id, &transfer->transfer_id);
@@ -243,7 +213,7 @@ static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer
         switch (transfer->data_type_id)
         {
         case UAVCAN_FILE_READ_ID:
-            if (node_mode == MODE_SOFTWARE_UPDATE)
+            if (*get_node_mode() == MODE_SOFTWARE_UPDATE)
             {
                 firmware_file_chunk_received(transfer);
             }
@@ -258,14 +228,14 @@ static void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer
 
 void dronecan_spin()
 {
-    xSemaphoreTake(g_canard_mutex, portMAX_DELAY);
+    xSemaphoreTake(get_dronecan_communication_semaphore(), portMAX_DELAY);
 
     const CanardCANFrame *frame;
-    while ((frame = canardPeekTxQueue(&g_canard)) != NULL)
+    while ((frame = canardPeekTxQueue(get_dronecan_instance())) != NULL)
     {
         if (can_transmit(frame))
         {
-            canardPopTxQueue(&g_canard);
+            canardPopTxQueue(get_dronecan_instance());
         }
         else
         {
@@ -276,7 +246,7 @@ void dronecan_spin()
     CanardCANFrame rx_frame;
     while (can_receive(&rx_frame))
     {
-        int16_t result = canardHandleRxFrame(&g_canard, &rx_frame, xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
+        int16_t result = canardHandleRxFrame(get_dronecan_instance(), &rx_frame, xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
         if (result != 0 && result != -CANARD_ERROR_RX_NOT_WANTED)
         {
             ESP_LOGI(TAG, "Error handling received frame: %d", result);
@@ -284,31 +254,9 @@ void dronecan_spin()
         }
     }
 
-    canardCleanupStaleTransfers(&g_canard, xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
+    canardCleanupStaleTransfers(get_dronecan_instance(), xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
 
-    xSemaphoreGive(g_canard_mutex);
-}
-
-void dronecan_init()
-{
-    ESP_LOGI(TAG, "Initializing DroneCAN node...");
-    init_unique_id();
-
-    g_canard_mutex = xSemaphoreCreateMutex();
-    configASSERT(g_canard_mutex != NULL);
-
-    if (!can_driver_init())
-    {
-        ESP_LOGE(TAG, "CAN driver init failed!");
-        return;
-    }
-
-    canardInit(&g_canard,
-               g_canard_memory_pool,
-               sizeof(g_canard_memory_pool),
-               on_transfer_received,
-               should_accept_transfer,
-               NULL);
+    xSemaphoreGive(get_dronecan_communication_semaphore());
 }
 
 void get_node_id()
@@ -317,7 +265,7 @@ void get_node_id()
     // also, we should listen for a second, as some node can be already in process. And it is good to wait until server is ready when all nodes starts at the same time
     vTaskDelay(pdMS_TO_TICKS(1000));
     ESP_LOGI(TAG, "DroneCAN node getting node ID started");
-    while (canardGetLocalNodeID(&g_canard) == CANARD_BROADCAST_NODE_ID)
+    while (canardGetLocalNodeID(get_dronecan_instance()) == CANARD_BROADCAST_NODE_ID)
     {
         if (node_id_message_received)
         {
@@ -361,98 +309,6 @@ void get_node_id()
         ESP_LOGI(TAG, "Dynamic node ID allocation message published, waiting for response...");
         vTaskDelay(pdMS_TO_TICKS(2000));
     }
-}
-
-void set_node_health(uint8_t new_health)
-{
-    node_health = new_health;
-}
-
-void set_node_mode(uint8_t new_mode)
-{
-    node_mode = new_mode;
-}
-
-uint8_t *get_node_health()
-{
-    return &node_health;
-}
-
-uint8_t *get_node_mode()
-{
-    return &node_mode;
-}
-
-bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len, uint8_t *transfer_id)
-{
-
-    xSemaphoreTake(g_canard_mutex, portMAX_DELAY);
-
-    int16_t result = canardBroadcast(&g_canard,
-                                     signature,
-                                     type_id,
-                                     transfer_id,
-                                     priority,
-                                     payload,
-                                     len);
-
-    xSemaphoreGive(g_canard_mutex);
-
-    if (result <= 0)
-    {
-        increase_logical_error();
-        ESP_LOGE(TAG, "Broadcast failed: %d", result);
-        return false;
-    }
-
-    increase_logical_tx();
-    return true;
-}
-
-bool dronecan_respond(uint8_t destination_node_id, uint8_t *inout_transfer_id, uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len)
-{
-    int16_t result = canardRequestOrRespond(&g_canard,
-                                            destination_node_id,
-                                            signature,
-                                            type_id,
-                                            inout_transfer_id,
-                                            priority,
-                                            CanardResponse,
-                                            payload,
-                                            len);
-
-    if (result <= 0)
-    {
-        increase_logical_error();
-        ESP_LOGE(TAG, "Respond failed: %d", result);
-        return false;
-    }
-
-    increase_logical_tx();
-    return true;
-}
-
-bool dronecan_request(uint8_t destination_node_id, uint8_t *inout_transfer_id, uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len)
-{
-    int16_t result = canardRequestOrRespond(&g_canard,
-                                            destination_node_id,
-                                            signature,
-                                            type_id,
-                                            inout_transfer_id,
-                                            priority,
-                                            CanardRequest,
-                                            payload,
-                                            len);
-
-    if (result <= 0)
-    {
-        increase_logical_error();
-        ESP_LOGE(TAG, "Respond failed: %d", result);
-        return false;
-    }
-
-    increase_logical_tx();
-    return true;
 }
 
 // TODO rewrite restart so it really send message before restart, now it just wait and restart without guarantee that message is sent

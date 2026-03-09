@@ -1,7 +1,7 @@
 #ifndef UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_1_H
 #define UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_1_H
 
-#include "dronecan_node.h"
+#include "helpers/dronecan_communication.h"
 #include "canard.h"
 #include <string.h>
 

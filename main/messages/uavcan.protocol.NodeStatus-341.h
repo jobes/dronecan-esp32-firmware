@@ -1,7 +1,8 @@
 #ifndef UAVCAN_PROTOCOL_NODESTATUS_341_H
 #define UAVCAN_PROTOCOL_NODESTATUS_341_H
 
-#include "dronecan_node.h"
+#include "helpers/dronecan_communication.h"
+#include "helpers/dronecan_node_state.h"
 
 #define UAVCAN_NODE_STATUS_ID 341
 #define UAVCAN_NODE_STATUS_SIGNATURE 0x0F0868D0C1A7C6F1ULL

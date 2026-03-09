@@ -3,6 +3,7 @@
 
 #include "bmp390.h"
 #include "helpers/dronecan_value_params.h"
+#include "helpers/dronecan_node_state.h"
 #include "messages/uavcan.equipment.air_data.StaticPressure-1028.h"
 #include "messages/uavcan.equipment.air_data.StaticTemperature-1029.h"
 

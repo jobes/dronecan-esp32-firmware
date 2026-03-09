@@ -1,7 +1,7 @@
 #ifndef UAVCAN_PROTOCOL_RESTARTNODE_5_H
 #define UAVCAN_PROTOCOL_RESTARTNODE_5_H
 
-#include "dronecan_node.h"
+#include "helpers/dronecan_communication.h"
 
 #define UAVCAN_RESTART_NODE_ID 5
 #define UAVCAN_RESTART_NODE_SIGNATURE 0x569E05394A3017F0ULL

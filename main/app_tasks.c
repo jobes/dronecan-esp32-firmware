@@ -3,6 +3,8 @@
 #include "esp_ota_ops.h"
 #include "messages/uavcan.protocol.NodeStatus-341.h"
 #include "helpers/dronecan_value_params.h"
+#include "helpers/dronecan_communication.h"
+#include "dronecan_node.h"
 
 static void dronecan_spin_task(void *arg)
 {
@@ -34,7 +36,7 @@ void init_app(TaskFunction_t app_task)
     ESP_LOGI("Main", "DroneCAN Node Starting...");
     ESP_LOGI("Main", "========================================");
 
-    dronecan_init();
+    dronecan_init(on_transfer_received, should_accept_transfer);
 
     xTaskCreate(
         dronecan_spin_task,

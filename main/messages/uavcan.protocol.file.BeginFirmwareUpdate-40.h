@@ -2,7 +2,7 @@
 #define UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_40_H
 
 #include "esp_log.h"
-#include "dronecan_node.h"
+#include "helpers/dronecan_communication.h"
 #include "messages/uavcan.protocol.file.Read-48.h"
 #include "esp_ota_ops.h"
 
