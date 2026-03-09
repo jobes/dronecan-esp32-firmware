@@ -1,35 +1,12 @@
 idf_component_register(
-    SRCS 
-        "main.c" 
-        "helpers/dronecan_tasks.c"
-        "helpers/dronecan_communication.c"
-        "helpers/dronecan_node_state.c"
-        "helpers/dronecan_value_params.c"
-        "helpers/esp_can.c"
-        "helpers/dronecan_dna_receiver.c"
-        "helpers/dronecan_receiver.c"
-        "helpers/dronecan_accepter.c"
-        "helpers/firmware_update.c"
-        "messages/uavcan.protocol.GetNodeInfo-1.c"
-        "messages/uavcan.protocol.dynamic_node_id.Allocation-1.c"
-        "messages/uavcan.protocol.GetTransportStats-4.c"
-        "messages/uavcan.protocol.file.BeginFirmwareUpdate-40.c"
-        "messages/uavcan.protocol.file.Read-48.c"
-        "messages/uavcan.protocol.param.ExecuteOpcode-10.c"
-        "messages/uavcan.protocol.param.GetSet-11.c"
-        "messages/uavcan.protocol.RestartNode-5.c"
-        "messages/uavcan.equipment.air_data.StaticPressure-1028.c"
-        "messages/uavcan.equipment.air_data.StaticTemperature-1029.c"
-        "messages/uavcan.protocol.NodeStatus-341.c"
-    INCLUDE_DIRS 
+    SRCS
+        "main.c"
+    INCLUDE_DIRS
         "."
-    REQUIRES 
-        "driver"
-        "esp_timer"
-        "libcanard"
+        "${PROJECT_DIR}/components"
+    REQUIRES
         "bmp3_sensor_api"
-        "nvs_flash"
-        "app_update"
+        "dronecan_mini"
 )
 
 target_compile_options(${COMPONENT_LIB} PRIVATE "-include" "${CMAKE_CURRENT_LIST_DIR}/project_config.h")

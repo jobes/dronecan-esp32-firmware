@@ -1,6 +1,6 @@
 #include "firmware_update.h"
 #include "esp_ota_ops.h"
-#include "helpers/dronecan_node_state.h"
+#include "dronecan_node_state.h"
 #include "messages/uavcan.protocol.file.Read-48.h"
 
 static char *firmware_path = NULL;

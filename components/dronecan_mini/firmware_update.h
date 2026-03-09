@@ -1,7 +1,7 @@
 #ifndef FIRMWARE_UPDATE_H
 #define FIRMWARE_UPDATE_H
 
-#include "helpers/dronecan_communication.h"
+#include "dronecan_communication.h"
 
 bool beginFirmwareUpdate(uint8_t source_node_id, char *path);
 void firmware_file_chunk_received(CanardRxTransfer *transfer);

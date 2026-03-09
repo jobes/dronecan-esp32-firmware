@@ -1,11 +1,11 @@
-#include "helpers/dronecan_tasks.h"
+#include "dronecan_mini/dronecan_tasks.h"
 #include "esp_log.h"
 
 #include "bmp390.h"
-#include "helpers/dronecan_value_params.h"
-#include "helpers/dronecan_node_state.h"
-#include "messages/uavcan.equipment.air_data.StaticPressure-1028.h"
-#include "messages/uavcan.equipment.air_data.StaticTemperature-1029.h"
+#include "dronecan_mini/dronecan_value_params.h"
+#include "dronecan_mini/dronecan_node_state.h"
+#include "dronecan_mini/messages/uavcan.equipment.air_data.StaticPressure-1028.h"
+#include "dronecan_mini/messages/uavcan.equipment.air_data.StaticTemperature-1029.h"
 
 static const char *TAG = "APP";
 

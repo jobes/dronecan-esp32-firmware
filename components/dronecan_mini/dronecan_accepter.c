@@ -1,5 +1,5 @@
-#include "helpers/dronecan_accepter.h"
-#include "helpers/dronecan_dna_receiver.h"
+#include "dronecan_accepter.h"
+#include "dronecan_dna_receiver.h"
 #include "canard.h"
 
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"

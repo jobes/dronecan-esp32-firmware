@@ -1,9 +1,9 @@
 #include "esp_log.h"
-#include "helpers/dronecan_communication.h"
+#include "dronecan_communication.h"
 #include "messages/uavcan.protocol.file.Read-48.h"
 #include "esp_ota_ops.h"
 #include "canard.h"
-#include "helpers/dronecan_node_state.h"
+#include "dronecan_node_state.h"
 
 #include "messages/uavcan.protocol.file.BeginFirmwareUpdate-40.h"
 

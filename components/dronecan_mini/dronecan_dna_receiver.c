@@ -1,8 +1,8 @@
 #include "canard.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
-#include "helpers/dronecan_communication.h"
-#include "helpers/dronecan_node_state.h"
+#include "dronecan_communication.h"
+#include "dronecan_node_state.h"
 #include "esp_random.h"
 #include "messages/uavcan.protocol.dynamic_node_id.Allocation-1.h"
 

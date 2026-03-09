@@ -1,8 +1,8 @@
 #ifndef UAVCAN_PROTOCOL_PARAM_GETSET_11_H
 #define UAVCAN_PROTOCOL_PARAM_GETSET_11_H
 
-#include "helpers/dronecan_communication.h"
-#include "helpers/dronecan_value_params.h"
+#include "dronecan_communication.h"
+#include "dronecan_value_params.h"
 
 #define UAVCAN_PARAM_GETSET_ID 11
 #define UAVCAN_PARAM_GETSET_SIGNATURE 0xA7B622F939D1A4D5ULL

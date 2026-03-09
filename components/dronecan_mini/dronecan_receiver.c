@@ -4,10 +4,10 @@
 #include "freertos/FreeRTOS.h"
 #include "driver/twai.h"
 
-#include "helpers/dronecan_dna_receiver.h"
-#include "helpers/dronecan_node_state.h"
-#include "helpers/esp_can.h"
-#include "helpers/firmware_update.h"
+#include "dronecan_dna_receiver.h"
+#include "dronecan_node_state.h"
+#include "esp_can.h"
+#include "firmware_update.h"
 
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"
 #include "messages/uavcan.protocol.RestartNode-5.h"
