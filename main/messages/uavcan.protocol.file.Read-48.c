@@ -1,7 +1,4 @@
-#include "messages/uavcan.protocol.file.Read-48.h"
-#include "helpers/dronecan_communication.h"
-#include <string.h>
-#include "esp_log.h"
+#include "uavcan.protocol.file.Read-48.h"
 
 bool request_read_48(uint8_t destination_node_id, uint64_t offset, const char *path)
 {

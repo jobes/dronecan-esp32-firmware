@@ -2,9 +2,11 @@
 #include "esp_timer.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
+#include "driver/twai.h"
 
 #include "helpers/dronecan_dna_receiver.h"
 #include "helpers/dronecan_node_state.h"
+#include "helpers/esp_can.h"
 
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"
 #include "messages/uavcan.protocol.RestartNode-5.h"
@@ -61,7 +63,7 @@ void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
             }
             break;
         case UAVCAN_PROTOCOL_PARAM_EXECUTE_OPCODE_ID:
-            response_10_paramExecuteOpcode_process(transfer);
+            response_10_paramExecuteOpcode_process(transfer, process_parameters_to_nvs(decode_10_paramExecuteOpcode_process(transfer)));
             break;
         case UAVCAN_FILE_BEGIN_FIRMWARE_UPDATE_ID:
             if (*get_node_mode() == MODE_SOFTWARE_UPDATE)
@@ -82,7 +84,14 @@ void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
 
             break;
         case UAVCAN_PROTOCOL_GET_TRANSPORT_STATS_ID:
-            response_4_getTransportStats(transfer->source_node_id, &transfer->transfer_id);
+            twai_status_info_t status;
+            twai_get_status_info(&status);
+            uint64_t phys_err = (uint64_t)status.rx_missed_count +
+                                (uint64_t)status.rx_overrun_count +
+                                (uint64_t)status.tx_failed_count +
+                                (uint64_t)status.arb_lost_count +
+                                (uint64_t)status.bus_error_count;
+            response_4_getTransportStats(transfer->source_node_id, &transfer->transfer_id, phys_err, get_physical_tx(), get_physical_rx(), get_logical_error(), get_logical_tx(), logical_rx);
             break;
         default:
             ESP_LOGW(TAG, "UNKNOWN TRANSFER RECEIVED: type_id=%d, source_node_id=%d", transfer->data_type_id, transfer->source_node_id);
@@ -105,9 +114,4 @@ void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
             break;
         }
     }
-}
-
-uint64_t get_logical_rx()
-{
-    return logical_rx;
 }

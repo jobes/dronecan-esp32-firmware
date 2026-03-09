@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <canard.h>
+#include "messages/uavcan.protocol.param.ExecuteOpcode-10.h"
 
 enum DeviceParameterType
 {
@@ -65,6 +66,7 @@ ParamChangedFunction get_param_changed_callback();
 void set_device_parameters(union DeviceParameter *device_parameters, uint16_t device_parameters_len);
 union DeviceParameter *get_device_parameters();
 uint16_t get_device_parameters_len();
+bool process_parameters_to_nvs(enum OpcodeAction action);
 bool save_parameters_to_nvs();
 bool erase_parameters_from_nvs();
 

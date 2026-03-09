@@ -1,4 +1,3 @@
-#include "helpers/dronecan_communication.h"
 #include "messages/uavcan.protocol.RestartNode-5.h"
 
 bool check_response_5_restart_transfer_valid(const CanardRxTransfer *transfer)

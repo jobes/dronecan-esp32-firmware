@@ -1,7 +1,7 @@
 #ifndef UAVCAN_PROTOCOL_FILE_READ_48_H
 #define UAVCAN_PROTOCOL_FILE_READ_48_H
 
-#include "canard.h"
+#include "helpers/dronecan_communication.h"
 
 #define UAVCAN_FILE_READ_ID 48
 #define UAVCAN_FILE_READ_SIGNATURE 0x8dcdca939f33f678ULL

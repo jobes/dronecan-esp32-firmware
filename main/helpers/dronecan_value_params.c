@@ -133,6 +133,19 @@ ParamChangedFunction get_param_changed_callback()
     return param_changed_callback;
 }
 
+bool process_parameters_to_nvs(enum OpcodeAction action)
+{
+    if (action == OPCODE_SAVE)
+    {
+        return save_parameters_to_nvs();
+    }
+    else if (action == OPCODE_ERASE)
+    {
+        return erase_parameters_from_nvs();
+    }
+    return false;
+}
+
 bool save_parameters_to_nvs()
 {
     union DeviceParameter *device_parameters = get_device_parameters();

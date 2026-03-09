@@ -3,6 +3,8 @@
 
 #include "canard.h"
 #include "freertos/FreeRTOS.h"
+#include <string.h>
+#include "esp_log.h"
 
 void dronecan_init(CanardOnTransferReception on_reception, CanardShouldAcceptTransfer should_accept);
 bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority, const void *payload, uint16_t len, uint8_t *transfer_id);

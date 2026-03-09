@@ -1,32 +1,20 @@
-#include "helpers/dronecan_communication.h"
-#include "helpers/dronecan_value_params.h"
-#include "messages/uavcan.protocol.param.ExecuteOpcode-10.h"
-#include "canard.h"
-#include "esp_log.h"
+#include "uavcan.protocol.param.ExecuteOpcode-10.h"
 
-// TODO move everything out that is not message specific, so that it can be reused in other messages if needed
-
-bool response_10_paramExecuteOpcode_process(CanardRxTransfer *transfer)
+enum OpcodeAction decode_10_paramExecuteOpcode_process(CanardRxTransfer *transfer)
 {
     uint8_t opcode = 0;
     canardDecodeScalar(transfer, 0, 8, false, &opcode);
-    bool ok = false;
-    if (opcode == 0)
+    if (opcode)
     {
-
-        ESP_LOGI("OPCODE", "Saving parameters to NVS");
-        ok = save_parameters_to_nvs();
-        ESP_LOGI("OPCODE", "Saving parameters to NVS result: %s", ok ? "OK" : "FAIL");
+        return OPCODE_ERASE;
     }
-    else if (opcode == 1)
-    { // Erase
-        ESP_LOGI("OPCODE", "Erasing parameters from NVS");
-        ok = erase_parameters_from_nvs();
-        ESP_LOGI("OPCODE", "Erasing parameters from NVS result: %s", ok ? "OK" : "FAIL");
-    }
+    return OPCODE_SAVE;
+}
 
+bool response_10_paramExecuteOpcode_process(CanardRxTransfer *transfer, bool result)
+{
     uint8_t buffer[7] = {0};
-    canardEncodeScalar(buffer, 48, 1, &ok);
+    canardEncodeScalar(buffer, 48, 1, &result);
 
     return dronecan_respond(transfer->source_node_id,
                             &transfer->transfer_id,
