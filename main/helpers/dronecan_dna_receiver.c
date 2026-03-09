@@ -2,8 +2,8 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "helpers/dronecan_communication.h"
+#include "helpers/dronecan_node_state.h"
 #include "esp_random.h"
-#include "messages/uavcan.protocol.GetNodeInfo-1.h"
 #include "messages/uavcan.protocol.dynamic_node_id.Allocation-1.h"
 
 static const char *TAG = "DroneCAN DNA receiver";

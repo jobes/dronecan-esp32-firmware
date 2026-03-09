@@ -1,8 +1,6 @@
 #include "dronecan_communication.h"
-#include "canard.h"
-#include "esp_log.h"
-#include "messages/uavcan.protocol.GetNodeInfo-1.h"
 #include "helpers/esp_can.h"
+#include "helpers/dronecan_node_state.h"
 
 static const char *TAG = "DC COMM"; // dronecan communication
 static SemaphoreHandle_t g_canard_mutex;

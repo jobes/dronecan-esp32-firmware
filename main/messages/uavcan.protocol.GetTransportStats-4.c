@@ -1,4 +1,4 @@
-#include "messages/uavcan.protocol.GetTransportStats-4.h"
+#include "uavcan.protocol.GetTransportStats-4.h"
 
 bool response_4_getTransportStats(uint8_t destination_node_id, uint8_t *inout_transfer_id, uint64_t phys_er, uint64_t phys_tx, uint64_t phys_rx, uint64_t log_er, uint64_t log_tx, uint64_t log_rx)
 {

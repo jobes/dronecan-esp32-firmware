@@ -22,5 +22,7 @@ void set_node_health(NodeHealth new_health);
 void set_node_mode(NodeMode new_mode);
 NodeHealth *get_node_health(void);
 NodeMode *get_node_mode(void);
+char *get_unique_id();
+void init_unique_id();
 
 #endif

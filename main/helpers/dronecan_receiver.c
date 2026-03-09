@@ -38,7 +38,8 @@ void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
         switch (transfer->data_type_id)
         {
         case UAVCAN_GET_NODE_INFO_ID:
-            response_1_getNodeInfo(transfer->source_node_id, &transfer->transfer_id);
+            uint32_t uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
+            response_1_getNodeInfo(transfer->source_node_id, &transfer->transfer_id, get_unique_id(), uptime, get_node_health(), get_node_mode());
             break;
         case UAVCAN_RESTART_NODE_ID:
             if (check_response_5_restart_transfer_valid(transfer))
