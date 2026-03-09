@@ -78,7 +78,7 @@ void transfer_received_for_dna(CanardInstance *ins, CanardRxTransfer *transfer)
             {
                 return; // not enough data for node ID allocation, ignore
             }
-            uint8_t node_id = process_1_dynamicNodeIdAllocation(transfer);
+            uint8_t node_id = process_1_dynamicNodeIdAllocation(transfer, get_unique_id());
             if (node_id != 0)
             {
                 ESP_LOGI(TAG, "Setting node ID to %d", node_id);

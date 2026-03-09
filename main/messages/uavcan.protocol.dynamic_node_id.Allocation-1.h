@@ -13,7 +13,7 @@ enum AllocationMsg
     FINAL_PART = 2
 };
 
-uint8_t process_1_dynamicNodeIdAllocation(CanardRxTransfer *transfer);
+uint8_t process_1_dynamicNodeIdAllocation(CanardRxTransfer *transfer, char *unique_id);
 bool publish_1_dynamicNodeIdAllocation(uint8_t preferred_node_id, enum AllocationMsg msg_part, char *uniques_id);
 
 #endif // UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_1_H

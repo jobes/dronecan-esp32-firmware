@@ -1,19 +1,15 @@
-#include "helpers/dronecan_communication.h"
-#include "canard.h"
-#include <string.h>
 #include "messages/uavcan.protocol.dynamic_node_id.Allocation-1.h"
-#include "messages/uavcan.protocol.GetNodeInfo-1.h"
 
 static enum AllocationMsg lastSentPart = FIRST_PART; // TODO move this variable out
 
-uint8_t process_1_dynamicNodeIdAllocation(CanardRxTransfer *transfer)
+uint8_t process_1_dynamicNodeIdAllocation(CanardRxTransfer *transfer, char *unique_id)
 {
     uint8_t node_id = 0;
     for (int i = 0; i < 16; i++)
     {
         uint8_t unique_id_char;
         canardDecodeScalar(transfer, i * 8 + 8, 8, false, &unique_id_char);
-        if (unique_id_char != get_unique_id()[i])
+        if (unique_id_char != unique_id[i])
         {
             canardDecodeScalar(transfer, 0, 7, false, &node_id);
             return 0; // unique ID does not match, ignore this allocation message
@@ -24,7 +20,7 @@ uint8_t process_1_dynamicNodeIdAllocation(CanardRxTransfer *transfer)
     return node_id;
 }
 
-bool publish_1_dynamicNodeIdAllocation(uint8_t preferred_node_id, enum AllocationMsg msg_part, char *uniques_id)
+bool publish_1_dynamicNodeIdAllocation(uint8_t preferred_node_id, enum AllocationMsg msg_part, char *unique_id)
 {
     static uint8_t transfer_id = 0;
     uint8_t buffer[7] = {0};
@@ -38,7 +34,7 @@ bool publish_1_dynamicNodeIdAllocation(uint8_t preferred_node_id, enum Allocatio
     uint8_t msg_part_size = (msg_part == FINAL_PART) ? 4 : 6;
     for (int i = 0; i < msg_part_size; i++)
     {
-        canardEncodeScalar(buffer, 8 + i * 8, 8, &uniques_id[msg_part * 6 + i]);
+        canardEncodeScalar(buffer, 8 + i * 8, 8, &unique_id[msg_part * 6 + i]);
     }
 
     return dronecan_broadcast(UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_SIGNATURE,
