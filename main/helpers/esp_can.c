@@ -7,7 +7,7 @@ static uint64_t physical_rx = 0;
 
 bool can_driver_init()
 {
-    twai_mode_t mode = TWAI_MODE_NORMAL;
+    twai_mode_t mode = CAN_MODE;
     twai_timing_config_t t_config = CAN_SPEED();
     twai_filter_config_t f_config = CAN_CONFIG();
     twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, mode);

@@ -11,16 +11,8 @@
 #include "messages/uavcan.protocol.dynamic_node_id.Allocation-1.h"
 #include "messages/uavcan.protocol.GetTransportStats-4.h"
 
-bool should_accept_transfer(
-    const CanardInstance *ins,
-    uint64_t *out_data_type_signature,
-    uint16_t data_type_id,
-    CanardTransferType transfer_type,
-    uint8_t source_node_id)
+bool should_accept_transfer(const CanardInstance *ins, uint64_t *out_data_type_signature, uint16_t data_type_id, CanardTransferType transfer_type, uint8_t source_node_id)
 {
-    (void)ins;
-    (void)source_node_id;
-
     if (canardGetLocalNodeID(ins) == CANARD_BROADCAST_NODE_ID) // node 0 will work only with allocation
     {
         return should_accept_transfer_for_dna(ins, out_data_type_signature, data_type_id, transfer_type, source_node_id);

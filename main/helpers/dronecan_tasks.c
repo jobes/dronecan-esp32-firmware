@@ -82,6 +82,10 @@ void init_tasks(TaskFunction_t app_task)
     get_node_id();
     esp_ota_mark_app_valid_cancel_rollback();
 
+    ESP_LOGI(TAG, "========================================");
+    ESP_LOGI(TAG, "DroneCAN UP WITH NODE_ID %d AND RUNNING.", get_node_id());
+    ESP_LOGI(TAG, "========================================");
+
     // after we got node ID, we can start other tasks, for example heartbeat and app task
     xTaskCreate(
         heartbeat_task,
