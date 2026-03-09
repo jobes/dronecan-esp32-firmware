@@ -1,14 +1,7 @@
-#include "dronecan_node.h"
+#include "helpers/dronecan_accepter.h"
+#include "helpers/dronecan_dna_receiver.h"
 #include "canard.h"
-#include "driver/twai.h"
-#include "esp_log.h"
-#include "esp_system.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/semphr.h"
-#include "esp_random.h"
-#include <string.h>
-#include "esp_timer.h"
+
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"
 #include "messages/uavcan.protocol.RestartNode-5.h"
 #include "messages/uavcan.protocol.param.GetSet-11.h"
@@ -17,8 +10,6 @@
 #include "messages/uavcan.protocol.file.Read-48.h"
 #include "messages/uavcan.protocol.dynamic_node_id.Allocation-1.h"
 #include "messages/uavcan.protocol.GetTransportStats-4.h"
-#include "helpers/dronecan_value_params.h"
-#include "helpers/dronecan_dna_receiver.h"
 
 bool should_accept_transfer(
     const CanardInstance *ins,
@@ -32,11 +23,7 @@ bool should_accept_transfer(
 
     if (canardGetLocalNodeID(ins) == CANARD_BROADCAST_NODE_ID) // node 0 will work only with allocation
     {
-        if (data_type_id == UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_ID)
-        {
-            *out_data_type_signature = UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_SIGNATURE;
-            return true;
-        }
+        return should_accept_transfer_for_dna(ins, out_data_type_signature, data_type_id, transfer_type, source_node_id);
     }
     else if (transfer_type == CanardTransferTypeRequest)
     {
@@ -73,7 +60,3 @@ bool should_accept_transfer(
     }
     return false;
 }
-
-// TODO rewrite restart so it really send message before restart, now it just wait and restart without guarantee that message is sent
-// TODO rewrite to a library style, main.c show then have only app task.
-// TODO remove all non needed static (move to .C)

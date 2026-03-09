@@ -6,8 +6,8 @@
 #include "helpers/dronecan_communication.h"
 #include "helpers/dronecan_dna_receiver.h"
 #include "helpers/esp_can.h"
-#include "dronecan_node.h"
 #include "helpers/dronecan_receiver.h"
+#include "helpers/dronecan_accepter.h"
 
 static const char *TAG = "TASKS";
 

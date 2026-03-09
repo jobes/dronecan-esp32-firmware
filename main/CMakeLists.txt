@@ -1,7 +1,6 @@
 idf_component_register(
     SRCS 
         "main.c" 
-        "dronecan_node.c"
         "helpers/dronecan_tasks.c"
         "helpers/dronecan_communication.c"
         "helpers/dronecan_node_state.c"
@@ -9,6 +8,7 @@ idf_component_register(
         "helpers/esp_can.c"
         "helpers/dronecan_dna_receiver.c"
         "helpers/dronecan_receiver.c"
+        "helpers/dronecan_accepter.c"
         "messages/uavcan.protocol.GetNodeInfo-1.c"
         "messages/uavcan.protocol.dynamic_node_id.Allocation-1.c"
         "messages/uavcan.protocol.GetTransportStats-4.c"
