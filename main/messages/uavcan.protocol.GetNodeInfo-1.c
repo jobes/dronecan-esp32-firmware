@@ -4,6 +4,8 @@
 #include "esp_mac.h"
 #include "esp_log.h"
 
+// TODO make data get from params (uptime, health, mode)
+
 static char UNIQUE_ID[17] = "INSKYCORE_";
 
 void init_unique_id()

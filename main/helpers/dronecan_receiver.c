@@ -1,7 +1,10 @@
 #include "canard.h"
 #include "esp_timer.h"
+#include "esp_log.h"
+#include "freertos/FreeRTOS.h"
 
 #include "helpers/dronecan_dna_receiver.h"
+#include "helpers/dronecan_node_state.h"
 
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"
 #include "messages/uavcan.protocol.RestartNode-5.h"

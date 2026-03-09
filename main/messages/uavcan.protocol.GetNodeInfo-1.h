@@ -1,10 +1,7 @@
 #ifndef UAVCAN_PROTOCOL_GETNODEINFO_1_H
 #define UAVCAN_PROTOCOL_GETNODEINFO_1_H
 
-#include "helpers/dronecan_communication.h"
-#include "helpers/dronecan_node_state.h"
-#include "esp_mac.h"
-#include "esp_log.h"
+#include <canard.h>
 
 #define UAVCAN_GET_NODE_INFO_ID 1
 #define UAVCAN_GET_NODE_INFO_SIGNATURE 0xEE468A8121C46A9EULL

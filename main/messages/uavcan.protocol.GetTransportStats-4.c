@@ -3,6 +3,7 @@
 #include "helpers/dronecan_receiver.h"
 #include "messages/uavcan.protocol.GetTransportStats-4.h"
 
+// TODO make get data from params
 void response_4_getTransportStats(uint8_t destination_node_id, uint8_t *inout_transfer_id)
 {
     twai_status_info_t status;

@@ -4,7 +4,7 @@
 #include "messages/uavcan.protocol.dynamic_node_id.Allocation-1.h"
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"
 
-static enum AllocationMsg lastSentPart = FIRST_PART;
+static enum AllocationMsg lastSentPart = FIRST_PART; // TODO move this variable out
 
 uint8_t process_1_dynamicNodeIdAllocation(CanardRxTransfer *transfer)
 {

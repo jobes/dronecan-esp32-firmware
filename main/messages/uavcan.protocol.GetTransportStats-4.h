@@ -1,9 +1,6 @@
 #ifndef UAVCAN_PROTOCOL_GET_TRANSPORT_STATS_4_H
 #define UAVCAN_PROTOCOL_GET_TRANSPORT_STATS_4_H
 
-#include "helpers/dronecan_communication.h"
-#include "helpers/esp_can.h"
-
 #define UAVCAN_PROTOCOL_GET_TRANSPORT_STATS_ID 4
 #define UAVCAN_PROTOCOL_GET_TRANSPORT_STATS_SIGNATURE 0xbe6f76a7ec312b04ULL
 

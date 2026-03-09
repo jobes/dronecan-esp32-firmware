@@ -58,7 +58,8 @@ static void heartbeat_task(void *arg)
 
     while (1)
     {
-        publish_341_nodeStatus();
+        uint32_t uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
+        publish_341_nodeStatus(uptime, get_node_health(), get_node_mode());
         vTaskDelayUntil(&last_wake_time, pdMS_TO_TICKS(DRONECAN_HEARTBEAT_INTERVAL_MS)); // 1 second interval with some margin
     }
 }

@@ -17,6 +17,9 @@ idf_component_register(
         "messages/uavcan.protocol.param.ExecuteOpcode-10.c"
         "messages/uavcan.protocol.param.GetSet-11.c"
         "messages/uavcan.protocol.RestartNode-5.c"
+        "messages/uavcan.equipment.air_data.StaticPressure-1028.c"
+        "messages/uavcan.equipment.air_data.StaticTemperature-1029.c"
+        "messages/uavcan.protocol.NodeStatus-341.c"
     INCLUDE_DIRS 
         "."
     REQUIRES 

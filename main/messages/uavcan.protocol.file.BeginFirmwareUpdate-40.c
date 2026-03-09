@@ -7,6 +7,7 @@
 
 #include "messages/uavcan.protocol.file.BeginFirmwareUpdate-40.h"
 
+// TODO move this variables out of file
 static char *firmware_path = NULL;
 static uint8_t firmware_source_node_id = 0;
 static char *firmware_file_chunk_content = NULL;

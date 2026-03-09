@@ -3,6 +3,8 @@
 #include "messages/uavcan.protocol.param.GetSet-11.h"
 #include <string.h>
 
+// TODO move everything out that is not message specific, so that it can be reused in other messages if needed
+
 uint8_t type_of_values(union DeviceParameter *param)
 {
     return param->Float.type;

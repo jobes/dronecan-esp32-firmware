@@ -3,7 +3,7 @@
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 #include <stdint.h>
-#include <stdbool.h>
+#include <canard.h>
 
 enum DeviceParameterType
 {

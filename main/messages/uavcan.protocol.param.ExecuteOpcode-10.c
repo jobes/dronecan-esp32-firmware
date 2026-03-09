@@ -4,6 +4,8 @@
 #include "canard.h"
 #include "esp_log.h"
 
+// TODO move everything out that is not message specific, so that it can be reused in other messages if needed
+
 bool response_10_paramExecuteOpcode_process(CanardRxTransfer *transfer)
 {
     uint8_t opcode = 0;

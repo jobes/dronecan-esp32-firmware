@@ -2,8 +2,6 @@
 #define UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_1_H
 
 #include "helpers/dronecan_communication.h"
-#include "canard.h"
-#include <string.h>
 
 #define UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_ID 1
 #define UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_SIGNATURE 0xb2a812620a11d40ULL

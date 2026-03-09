@@ -1,7 +1,7 @@
 #ifndef UAVCAN_PROTOCOL_PARAM_GETSET_11_H
 #define UAVCAN_PROTOCOL_PARAM_GETSET_11_H
 
-#include "helpers/dronecan_communication.h"
+#include "canard.h"
 #include "helpers/dronecan_value_params.h"
 
 #define UAVCAN_PARAM_GETSET_ID 11
