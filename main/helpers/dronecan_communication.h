@@ -12,6 +12,7 @@ bool dronecan_request(uint8_t destination_node_id, uint8_t *inout_transfer_id, u
 SemaphoreHandle_t get_dronecan_communication_semaphore();
 CanardInstance *get_dronecan_instance();
 uint64_t get_logical_error();
+uint64_t get_logical_tx();
 void increase_logical_error();
 
 #endif // DRONECAN_COMMUNICATION_H

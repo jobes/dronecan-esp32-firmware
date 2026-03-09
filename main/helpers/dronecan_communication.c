@@ -120,6 +120,11 @@ uint64_t get_logical_error()
     return logical_error;
 }
 
+uint64_t get_logical_tx()
+{
+    return logical_tx;
+}
+
 void increase_logical_error()
 {
     logical_error++;

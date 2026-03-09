@@ -2,12 +2,21 @@ idf_component_register(
     SRCS 
         "main.c" 
         "dronecan_node.c"
-        "app_tasks.c"
+        "helpers/dronecan_tasks.c"
         "helpers/dronecan_communication.c"
         "helpers/dronecan_node_state.c"
         "helpers/dronecan_value_params.c"
         "helpers/esp_can.c"
+        "helpers/dronecan_dna_receiver.c"
+        "helpers/dronecan_receiver.c"
         "messages/uavcan.protocol.GetNodeInfo-1.c"
+        "messages/uavcan.protocol.dynamic_node_id.Allocation-1.c"
+        "messages/uavcan.protocol.GetTransportStats-4.c"
+        "messages/uavcan.protocol.file.BeginFirmwareUpdate-40.c"
+        "messages/uavcan.protocol.file.Read-48.c"
+        "messages/uavcan.protocol.param.ExecuteOpcode-10.c"
+        "messages/uavcan.protocol.param.GetSet-11.c"
+        "messages/uavcan.protocol.RestartNode-5.c"
     INCLUDE_DIRS 
         "."
     REQUIRES 
