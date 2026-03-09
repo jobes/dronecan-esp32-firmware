@@ -1,4 +1,4 @@
-#include "messages/uavcan.protocol.dynamic_node_id.Allocation-1.h"
+#include "uavcan.protocol.dynamic_node_id.Allocation-1.h"
 
 static enum AllocationMsg lastSentPart = FIRST_PART; // TODO move this variable out
 
