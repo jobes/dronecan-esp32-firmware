@@ -9,6 +9,7 @@ idf_component_register(
         "helpers/dronecan_dna_receiver.c"
         "helpers/dronecan_receiver.c"
         "helpers/dronecan_accepter.c"
+        "helpers/firmware_update.c"
         "messages/uavcan.protocol.GetNodeInfo-1.c"
         "messages/uavcan.protocol.dynamic_node_id.Allocation-1.c"
         "messages/uavcan.protocol.GetTransportStats-4.c"

@@ -7,6 +7,7 @@
 #include "helpers/dronecan_dna_receiver.h"
 #include "helpers/dronecan_node_state.h"
 #include "helpers/esp_can.h"
+#include "helpers/firmware_update.h"
 
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"
 #include "messages/uavcan.protocol.RestartNode-5.h"
@@ -73,7 +74,10 @@ void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
                 break;
             }
             set_node_mode(MODE_SOFTWARE_UPDATE);
-            if (process_40_beginFirmwareUpdate(transfer))
+            uint8_t firmware_source_node_id;
+            char *firmware_path;
+            process_40_beginFirmwareUpdate(transfer, &firmware_source_node_id, &firmware_path);
+            if (beginFirmwareUpdate(firmware_source_node_id, firmware_path))
             {
                 response_40_beginFirmwareUpdate(OK, transfer->source_node_id, &transfer->transfer_id);
                 request_read_48(get_firmware_source_node_id(), 0, get_firmware_path());

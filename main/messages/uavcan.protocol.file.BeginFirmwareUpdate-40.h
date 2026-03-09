@@ -14,13 +14,7 @@ enum RESPONSE_TYPE
     UNKNOWN = 3
 };
 
-bool process_40_beginFirmwareUpdate(CanardRxTransfer *transfer);
-
+void process_40_beginFirmwareUpdate(CanardRxTransfer *transfer, uint8_t *firmware_source_node_id, char **firmware_path);
 bool response_40_beginFirmwareUpdate(enum RESPONSE_TYPE response_type, uint8_t destination_node_id, uint8_t *transfer_id);
-
-void firmware_file_chunk_received(CanardRxTransfer *transfer);
-
-uint8_t get_firmware_source_node_id();
-char *get_firmware_path();
 
 #endif // UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_40_H
