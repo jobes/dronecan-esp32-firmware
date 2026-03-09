@@ -3,7 +3,7 @@ idf_component_register(
         "main.c"
     INCLUDE_DIRS
         "."
-        "${PROJECT_DIR}/components"
+        "${PROJECT_DIR}/../../components"
     REQUIRES
         "bmp3_sensor_api"
         "dronecan_mini"
