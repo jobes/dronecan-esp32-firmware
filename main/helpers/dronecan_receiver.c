@@ -52,7 +52,7 @@ void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
             }
             break;
         case UAVCAN_PARAM_GETSET_ID:
-            uint16_t param_index = decode_11_paramGetSet_request(transfer);
+            uint16_t param_index = decode_11_paramGetSet_request(transfer, get_device_parameters(), get_device_parameters_len());
 
             if (param_index < get_device_parameters_len())
             {

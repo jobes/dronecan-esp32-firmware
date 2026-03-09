@@ -1,7 +1,4 @@
-#include "helpers/dronecan_communication.h"
-#include "helpers/dronecan_value_params.h"
 #include "messages/uavcan.protocol.param.GetSet-11.h"
-#include <string.h>
 
 // TODO move everything out that is not message specific, so that it can be reused in other messages if needed
 
@@ -255,7 +252,7 @@ bool response_11_paramGetSetEmpty(uint8_t destination_node_id, uint8_t *inout_tr
                             sizeof(buffer));
 }
 
-uint16_t set_parameter_value(CanardRxTransfer *transfer, uint16_t name_start, void *value)
+uint16_t set_parameter_value(CanardRxTransfer *transfer, uint16_t name_start, void *value, union DeviceParameter *device_parameters, uint16_t device_parameters_len)
 {
     // get name
     char name[transfer->payload_len - name_start / 8 + 1];
@@ -266,9 +263,9 @@ uint16_t set_parameter_value(CanardRxTransfer *transfer, uint16_t name_start, vo
     }
     name[transfer->payload_len - name_start / 8] = '\0';
     // find parameter and set value
-    for (int i = 0; i < get_device_parameters_len(); i++)
+    for (int i = 0; i < device_parameters_len; i++)
     {
-        union DeviceParameter *parameter = &get_device_parameters()[i];
+        union DeviceParameter *parameter = &device_parameters[i];
         if (strcmp(name_value(parameter), name) == 0)
         {
             if (value != NULL)
@@ -286,7 +283,7 @@ uint16_t set_parameter_value(CanardRxTransfer *transfer, uint16_t name_start, vo
 }
 
 // for requested parameter return index, if value sent save it to parameter
-uint16_t decode_11_paramGetSet_request(CanardRxTransfer *transfer)
+uint16_t decode_11_paramGetSet_request(CanardRxTransfer *transfer, union DeviceParameter *data, uint16_t data_length)
 {
     uint16_t param_index = 0;
     canardDecodeScalar(transfer, 0, 13, false, &param_index);
@@ -298,7 +295,7 @@ uint16_t decode_11_paramGetSet_request(CanardRxTransfer *transfer)
     {
         if (transfer->payload_len * 8 > offset) // if there is value in transfer, set it, otherwise just return index
         {
-            return set_parameter_value(transfer, offset, NULL);
+            return set_parameter_value(transfer, offset, NULL, data, data_length);
         }
         return param_index;
     }
@@ -309,11 +306,11 @@ uint16_t decode_11_paramGetSet_request(CanardRxTransfer *transfer)
         switch (value_type)
         {
         case DEVICE_PARAM_TYPE_INT:
-            return set_parameter_value(transfer, offset + 64, &int_value);
+            return set_parameter_value(transfer, offset + 64, &int_value, data, data_length);
         case DEVICE_PARAM_TYPE_FLOAT:
-            return set_parameter_value(transfer, offset + 32, &int_value);
+            return set_parameter_value(transfer, offset + 32, &int_value, data, data_length);
         case DEVICE_PARAM_TYPE_BOOL:
-            return set_parameter_value(transfer, offset + 8, &int_value);
+            return set_parameter_value(transfer, offset + 8, &int_value, data, data_length);
         default:
             return -1;
         }
@@ -330,7 +327,7 @@ uint16_t decode_11_paramGetSet_request(CanardRxTransfer *transfer)
             offset += 8;
         }
         str_value[strlength] = '\0';
-        return set_parameter_value(transfer, offset, str_value);
+        return set_parameter_value(transfer, offset, str_value, data, data_length);
     }
     return -1; // unknown type
 }
