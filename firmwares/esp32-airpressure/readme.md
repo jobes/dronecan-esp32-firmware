@@ -63,7 +63,7 @@ From repository root:
 ```bash
 . /opt/esp-idf/export.sh
 cd firmwares/esp32-airpressure
-idf.py set-target esp32c3
+# idf.py set-target esp32c3 already set
 idf.py -p /dev/ttyACM1 build flash monitor
 ```
 
