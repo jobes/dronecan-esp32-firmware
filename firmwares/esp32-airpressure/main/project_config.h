@@ -11,8 +11,8 @@
 #define MAJOR_HW_VERSION 0
 
 // dronecan
-#define CAN_TX_PIN GPIO_NUM_21
-#define CAN_RX_PIN GPIO_NUM_20
+#define CAN_TX_PIN GPIO_NUM_3
+#define CAN_RX_PIN GPIO_NUM_2
 #define CAN_SPEED TWAI_TIMING_CONFIG_1MBITS
 #define CAN_CONFIG TWAI_FILTER_CONFIG_ACCEPT_ALL
 #define CAN_MODE TWAI_MODE_NORMAL
@@ -21,10 +21,10 @@
 #define DRONECAN_HEARTBEAT_INTERVAL_MS 950 // 1 second interval with some margin
 
 // BMP390
-#define BMP_MISO GPIO_NUM_5
-#define BMP_MOSI GPIO_NUM_6
-#define BMP_SCLK GPIO_NUM_4
-#define BMP_CS GPIO_NUM_7
+#define BMP_MISO GPIO_NUM_6
+#define BMP_MOSI GPIO_NUM_7
+#define BMP_SCLK GPIO_NUM_8
+#define BMP_CS GPIO_NUM_5
 #define SPI_SPEED_HZ 1000000
 
 #endif
