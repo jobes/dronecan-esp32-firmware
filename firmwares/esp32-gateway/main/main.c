@@ -5,6 +5,8 @@
 #include "dronecan_mini/dronecan_node_state.h"
 #include "dronecan_mini/messages/uavcan.equipment.air_data.StaticPressure-1028.h"
 #include "dronecan_mini/messages/uavcan.equipment.air_data.StaticTemperature-1029.h"
+#include "wifi_manager.h"
+
 
 static const char *TAG = "APP";
 
@@ -39,9 +41,12 @@ void app_main(void)
     union DeviceParameter device_parameters[] = {
         {.String = {DEVICE_PARAM_TYPE_STRING, "AP_SSID", "airplane_gateway"}},
         {.String = {DEVICE_PARAM_TYPE_STRING, "AP_PASSWORD", "airplane123456"}},
+        {.String = {DEVICE_PARAM_TYPE_STRING, "STA_SSID", ""}},
+        {.String = {DEVICE_PARAM_TYPE_STRING, "STA_PASSWORD", ""}},
     };
 
     set_param_changed_callback(param_changed);
     set_device_parameters(device_parameters, ARRAY_SIZE(device_parameters));
+    wifi_init_manager();
     init_tasks(main_task);
 }

@@ -123,6 +123,21 @@ uint16_t get_device_parameters_len()
     return singleton_device_parameters_len;
 }
 
+union DeviceParameter *get_device_parameter(char *name)
+{
+    union DeviceParameter *device_parameters = get_device_parameters();
+    uint16_t device_parameters_len = get_device_parameters_len();
+
+    for (uint16_t i = 0; i < device_parameters_len; i++)
+    {
+        if (strcmp(device_parameters[i].Float.name, name) == 0)
+        {
+            return &device_parameters[i];
+        }
+    }
+    return NULL;
+}
+
 void set_param_changed_callback(ParamChangedFunction callback)
 {
     param_changed_callback = callback;
