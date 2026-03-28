@@ -1,6 +1,10 @@
 #ifndef PROJECT_CONFIG_H
 #define PROJECT_CONFIG_H
 
+// stringify helper
+#define _STR(x) #x
+#define STR(x) _STR(x)
+
 // node info
 #define DEVICE_NAME "com.inskycore.dronecan_node.gateway"
 #define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)

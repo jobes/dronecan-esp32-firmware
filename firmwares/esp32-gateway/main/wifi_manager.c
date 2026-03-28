@@ -10,11 +10,59 @@
 #include "freertos/timers.h"
 #include "dronecan_mini/dronecan_value_params.h"
 #include "esp_mac.h"
+#include "project_config.h"
+#include "mdns.h"
+#include "http_server.h"
 
 static const char *TAG = "WIFI_MGR";
 
 static int s_retry_num = 0;
+static httpd_handle_t s_http_server = NULL;
 #define MAXIMUM_RETRY 5
+
+// ---- mDNS helpers ----------------------------------------------------------
+
+static void mdns_start_service(void)
+{
+    union DeviceParameter *param = get_device_parameter("HOSTNAME");
+
+    if (!param || !param->String.value || strlen(param->String.value) == 0)
+    {
+        mdns_free();
+        ESP_LOGI(TAG, "mDNS disabled: HOSTNAME is empty");
+        return;
+    }
+
+    const char *mdns_name = param->String.value;
+
+    // Stop any existing mDNS instance before (re)starting
+    mdns_free();
+
+    esp_err_t err = mdns_init();
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "mDNS init failed: %s", esp_err_to_name(err));
+        return;
+    }
+
+    ESP_ERROR_CHECK(mdns_hostname_set(mdns_name));
+    ESP_ERROR_CHECK(mdns_instance_name_set(DEVICE_NAME));
+
+    // Advertise an HTTP service so the device is easily discoverable
+    mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
+
+    ESP_LOGI(TAG, "mDNS started: hostname='%s.local', instance='%s'", mdns_name, DEVICE_NAME);
+}
+
+static void ensure_http_server(void)
+{
+    if (!s_http_server)
+    {
+        s_http_server = http_server_start();
+    }
+}
+
+// ---------------------------------------------------------------------------
 
 // Forward declarations
 static void wifi_ap_fallback_start(void);
@@ -107,6 +155,9 @@ static void event_handler(void *arg, esp_event_base_t event_base,
             ESP_LOGI(TAG, "Successfully connected to STA. Disabling fallback AP.");
             ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
         }
+
+        mdns_start_service();
+        ensure_http_server();
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STACONNECTED)
     {
@@ -158,6 +209,9 @@ static void wifi_ap_fallback_start(void)
     ESP_ERROR_CHECK(esp_wifi_start());
 
     ESP_LOGI(TAG, "Fallback AP Started successfully. SSID: '%s'. Background STA retry active.", ap_ssid);
+
+    mdns_start_service();
+    ensure_http_server();
 
     // Start 10s timer to trigger reconnect without stopping AP
     if (s_reconnect_timer == NULL)
@@ -214,8 +268,32 @@ void wifi_init_manager(void)
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    esp_netif_create_default_wifi_sta();
+    esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
     esp_netif_create_default_wifi_ap();
+
+    union DeviceParameter *hostname_param = get_device_parameter("HOSTNAME");
+    if (hostname_param && hostname_param->String.value && strlen(hostname_param->String.value) > 0)
+    {
+        esp_netif_set_hostname(sta_netif, hostname_param->String.value);
+        ESP_LOGI(TAG, "Hostname set to: %s", hostname_param->String.value);
+    }
+
+    // Set DHCP Option 60 – Vendor Class Identifier
+    // Identifies the device type/vendor to the DHCP server
+    esp_err_t opt60_err = esp_netif_dhcpc_option(
+        sta_netif,
+        ESP_NETIF_OP_SET,
+        ESP_NETIF_VENDOR_CLASS_IDENTIFIER,
+        DEVICE_NAME,
+        DEVICE_NAME_LEN);
+    if (opt60_err != ESP_OK)
+    {
+        ESP_LOGW(TAG, "Failed to set DHCP Option 60 (Vendor Class Identifier): %s", esp_err_to_name(opt60_err));
+    }
+    else
+    {
+        ESP_LOGI(TAG, "DHCP Option 60 set to: %s", DEVICE_NAME);
+    }
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));

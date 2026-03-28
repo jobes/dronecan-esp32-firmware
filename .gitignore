@@ -3,3 +3,4 @@ build
 sdkconfig.old
 firmwares/*/build
 firmwares/*/sdkconfig.old
+managed_components

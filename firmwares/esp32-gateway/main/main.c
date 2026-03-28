@@ -7,7 +7,6 @@
 #include "dronecan_mini/messages/uavcan.equipment.air_data.StaticTemperature-1029.h"
 #include "wifi_manager.h"
 
-
 static const char *TAG = "APP";
 
 static void main_task(void *arg)
@@ -39,6 +38,7 @@ void param_changed(uint16_t index)
 void app_main(void)
 {
     union DeviceParameter device_parameters[] = {
+        {.String = {DEVICE_PARAM_TYPE_STRING, "HOSTNAME", "airplane_gateway"}},
         {.String = {DEVICE_PARAM_TYPE_STRING, "AP_SSID", "airplane_gateway"}},
         {.String = {DEVICE_PARAM_TYPE_STRING, "AP_PASSWORD", "airplane123456"}},
         {.String = {DEVICE_PARAM_TYPE_STRING, "STA_SSID", ""}},
