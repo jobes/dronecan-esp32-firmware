@@ -51,6 +51,9 @@ static void mdns_start_service(void)
     // Advertise an HTTP service so the device is easily discoverable
     mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
 
+    // Advertise Cannelloni (CAN-over-UDP) service for CAN bus tunneling
+    mdns_service_add(NULL, "_cannelloni", "_udp", 20000, NULL, 0);
+
     ESP_LOGI(TAG, "mDNS started: hostname='%s.local', instance='%s'", mdns_name, DEVICE_NAME);
 }
 
