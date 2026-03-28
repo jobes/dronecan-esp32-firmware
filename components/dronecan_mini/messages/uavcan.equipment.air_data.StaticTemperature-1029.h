@@ -10,8 +10,8 @@
     msg name: uavcan.equipment.air_data.StaticTemperature
     msg ID: 1029
 */
-bool publish_1029_staticTemperature(_Float16 temperature_k, _Float16 variance_v2);
+bool publish_1029_staticTemperature(float temperature_k, float variance_v2);
 
-bool publish_1029_staticTemperatureCelsius(_Float16 temperature_c, _Float16 variance_c2);
+bool publish_1029_staticTemperatureCelsius(float temperature_c, float variance_c2);
 
 #endif // UAVCAN_EQUIPMENT_AIR_DATA_STATICTEMPERATURE_1029_H

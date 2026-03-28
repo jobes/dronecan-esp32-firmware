@@ -10,6 +10,6 @@
     msg name: uavcan.equipment.air_data.StaticPressure
     msg ID: 1028
 */
-bool publish_1028_staticPressure(_Float32 pressure_pa, _Float16 variance_pa2);
+bool publish_1028_staticPressure(float pressure_pa, float variance_pa2);
 
 #endif // UAVCAN_EQUIPMENT_AIR_DATA_STATICPRESSURE_1028_H
