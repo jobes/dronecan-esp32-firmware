@@ -30,11 +30,6 @@ static void main_task(void *arg)
     }
 }
 
-void param_changed(uint16_t index)
-{
-    ESP_LOGI(TAG, "Parameter index %d changed", index);
-}
-
 void app_main(void)
 {
     union DeviceParameter device_parameters[] = {
@@ -45,7 +40,6 @@ void app_main(void)
         {.String = {DEVICE_PARAM_TYPE_STRING, "STA_PASSWORD", ""}},
     };
 
-    set_param_changed_callback(param_changed);
     set_device_parameters(device_parameters, ARRAY_SIZE(device_parameters));
     wifi_init_manager();
     init_tasks(main_task);
