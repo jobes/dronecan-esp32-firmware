@@ -52,14 +52,12 @@ static void dronecan_spin_task(void *arg)
     const CanardCANFrame *frame;
     while ((frame = canardPeekTxQueue(get_dronecan_instance())) != NULL)
     {
-      if (can_transmit(frame))
+      can_transmit(frame);
+      if (tx_listener != NULL)
       {
-        if (tx_listener != NULL)
-        {
-          tx_listener(frame);
-        }
-        canardPopTxQueue(get_dronecan_instance());
+        tx_listener(frame);
       }
+      canardPopTxQueue(get_dronecan_instance());
     }
 
     // 2. CAN hardware RX
@@ -159,6 +157,5 @@ void init_tasks(TaskFunction_t app_task, uint8_t node_id, BaseType_t core_id)
 
   xTaskCreatePinnedToCore(app_task, "app_task", 2048, NULL, 3, NULL, core_id);
 
-  ESP_LOGI(TAG, "All tasks created successfully (core_id=%d)",
-           (int)core_id);
+  ESP_LOGI(TAG, "All tasks created successfully (core_id=%d)", (int)core_id);
 }
