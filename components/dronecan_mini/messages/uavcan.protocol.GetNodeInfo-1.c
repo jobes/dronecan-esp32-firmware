@@ -36,7 +36,9 @@ bool response_1_getNodeInfo(uint8_t destination_node_id, uint8_t *inout_transfer
     offset += 8;
     canardEncodeScalar(buffer, offset, 8, &minor_hw_version);
     offset += 8;
-    canardEncodeScalar(buffer, offset, 16 * 8, unique_id);
+    canardEncodeScalar(buffer, offset, 64, unique_id);
+    offset += 64;
+    canardEncodeScalar(buffer, offset, 64, &unique_id[8]);
     offset = (7 + 15 + 18 + 1) * 8; // align to next byte, should be 320
 
     // Name
