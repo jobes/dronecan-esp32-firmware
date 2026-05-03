@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DroneCAN Gateway</title>
+    <style>
+        :root {
+            --primary: #0fbcf9;
+            --secondary: #0be881;
+            --bg: #1a1a2e;
+            --card-bg: #16213e;
+            --text: #e0e0e0;
+            --input-bg: #0f3460;
+        }
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        nav {
+            background: #0f3460;
+            display: flex;
+            justify-content: center;
+            padding: 0.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        nav a {
+            color: var(--text);
+            text-decoration: none;
+            padding: 0.8rem 1.2rem;
+            font-weight: 600;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+        nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        nav a.active {
+            color: var(--primary);
+            background: rgba(15, 188, 249, 0.1);
+        }
+        .content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h1 {
+            color: var(--primary);
+            margin: 0 0 1.5rem 0;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+        h2 {
+            color: var(--primary);
+            font-size: 1.1rem;
+            margin: 0 0 1rem 0;
+            border-bottom: 1px solid #30475e;
+            padding-bottom: 0.3rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.3rem;
+            font-size: 0.85rem;
+            color: #a0a0a0;
+        }
+        input {
+            width: 100%;
+            padding: 0.7rem;
+            border-radius: 6px;
+            border: 1px solid #30475e;
+            background: var(--input-bg);
+            color: #fff;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            text-align: center;
+            text-decoration: none;
+        }
+        .btn-save {
+            background: var(--primary);
+            color: #fff;
+        }
+        .btn-restart {
+            background: #30475e;
+            color: #fff;
+            margin-top: 2rem;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.4rem;
+        }
+        .info-label {
+            color: #a0a0a0;
+        }
+        p.footer {
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    {{NAV}}
+    <div class="content">
+        <div class="card">
+            {{CONTENT}}
+        </div>
+    </div>
+</body>
+</html>
+

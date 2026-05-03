@@ -81,5 +81,5 @@ void app_main(void)
 
     set_param_changed_callback(param_changed);
     set_device_parameters(device_parameters, ARRAY_SIZE(device_parameters));
-    init_tasks(main_task);
+    init_tasks(main_task, 0, tskNO_AFFINITY);
 }

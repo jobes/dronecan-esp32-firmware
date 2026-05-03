@@ -17,6 +17,7 @@ Run the standard ESP-IDF build and flash command. Replace `/dev/ttyUSB0` with yo
 
 // turbo
 ```bash
+. /opt/esp-idf/export.sh
 idf.py build
 ```
 

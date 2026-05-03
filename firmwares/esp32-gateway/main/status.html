@@ -1,0 +1,12 @@
+<h1>Device Status</h1>
+<div class="info-row"><span class="info-label">Device</span><span>DroneCAN Gateway</span></div>
+<div class="info-row"><span class="info-label">HW Version</span><span>{{HW_VER}}</span></div>
+<div class="info-row"><span class="info-label">SW Version</span><span>{{SW_VER}}</span></div>
+<div class="info-row"><span class="info-label">IP Address</span><span>{{IP_ADDR}}</span></div>
+<div class="info-row"><span class="info-label">mDNS Address</span><span>{{MDNS_ADDR}}</span></div>
+<div class="info-row"><span class="info-label">Status</span><span style="color:var(--secondary)">Running</span></div>
+
+<form action="/restart" method="POST" onsubmit="return confirm('Restart device?')">
+    <button type="submit" class="btn btn-restart">Restart Device</button>
+</form>
+<p class="footer">Inskycore DroneCAN System</p>
