@@ -71,7 +71,8 @@ static void dronecan_spin_task(void *arg)
       int16_t result =
           canardHandleRxFrame(get_dronecan_instance(), &rx_frame,
                               xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
-      if (result != 0 && result != -CANARD_ERROR_RX_NOT_WANTED)
+      if (result != 0 && result != -CANARD_ERROR_RX_NOT_WANTED &&
+          result != -CANARD_ERROR_RX_WRONG_ADDRESS)
       {
         ESP_LOGI(TAG, "Error handling received frame: %d", result);
         increase_logical_error();
@@ -87,7 +88,8 @@ static void dronecan_spin_task(void *arg)
         int16_t result = canardHandleRxFrame(
             get_dronecan_instance(), &inject_frame,
             xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
-        if (result != 0 && result != -CANARD_ERROR_RX_NOT_WANTED)
+        if (result != 0 && result != -CANARD_ERROR_RX_NOT_WANTED &&
+            result != -CANARD_ERROR_RX_WRONG_ADDRESS)
         {
           ESP_LOGI(TAG, "Error handling injected frame: %d", result);
           increase_logical_error();

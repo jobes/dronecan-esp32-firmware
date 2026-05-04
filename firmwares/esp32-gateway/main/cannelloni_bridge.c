@@ -45,8 +45,8 @@ uint8_t get_extra_iface_stats(uavcan_protocol_GetTransportStats_CanIfaceStats *s
 // Cannelloni protocol V2 constants
 #define CANNELLONI_VERSION 2
 #define CANNELLONI_OP_DATA 0
-#define CANNELLONI_HEADER_SIZE 5 // version(1), op_code(1), seq(1), count(2)
-#define CANNELLONI_FRAME_SIZE 13 // id(4), length(1), data(8)
+#define CANNELLONI_HEADER_SIZE 5       // version(1), op_code(1), seq(1), count(2)
+#define CANNELLONI_FRAME_HEADER_SIZE 5 // id(4), length(1)
 #define MAX_FRAMES_PER_PACKET 10
 
 static uint32_t update_peer(struct sockaddr_in *addr, uint8_t seq)
@@ -179,7 +179,7 @@ static void cannelloni_udp_rx_task(void *pvParameters)
       can_transmit(&frame);
       dronecan_inject_rx_frame(&frame);
       cannelloni_rx_frames++;
-      pos += CANNELLONI_FRAME_SIZE;
+      pos += CANNELLONI_FRAME_HEADER_SIZE + frame.data_len;
     }
   }
 }
@@ -189,7 +189,7 @@ static void cannelloni_udp_tx_task(void *pvParameters)
   int sock = (int)(intptr_t)pvParameters;
   CanardCANFrame frames[MAX_FRAMES_PER_PACKET];
   uint8_t tx_buffer[CANNELLONI_HEADER_SIZE +
-                    (CANNELLONI_FRAME_SIZE * MAX_FRAMES_PER_PACKET)];
+                    (MAX_FRAMES_PER_PACKET * (CANNELLONI_FRAME_HEADER_SIZE + 8))];
   uint8_t seq = 0;
 
   ESP_LOGI(TAG, "UDP TX task started (V2) with batching (max %d frames)",
@@ -234,14 +234,13 @@ static void cannelloni_udp_tx_task(void *pvParameters)
         tx_buffer[pos + 3] = id & 0xFF;
         tx_buffer[pos + 4] = frames[i].data_len;
 
-        memset(&tx_buffer[pos + 5], 0, 8);
         memcpy(&tx_buffer[pos + 5], frames[i].data, frames[i].data_len);
 
         cannelloni_tx_frames++;
-        pos += CANNELLONI_FRAME_SIZE;
+        pos += CANNELLONI_FRAME_HEADER_SIZE + frames[i].data_len;
       }
 
-      int total_len = CANNELLONI_HEADER_SIZE + (count * CANNELLONI_FRAME_SIZE);
+      int total_len = pos;
 
       int active_peers = 0;
       for (int i = 0; i < CANNELLONI_MAX_PEERS; i++)
