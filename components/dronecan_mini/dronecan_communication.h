@@ -11,12 +11,16 @@ void dronecan_init(CanardOnTransferReception on_reception,
 bool dronecan_broadcast(uint64_t signature, uint16_t type_id, uint8_t priority,
                         const void *payload, uint16_t len,
                         uint8_t *transfer_id);
+bool dronecan_broadcast_on_rcv_msg(uint64_t signature, uint16_t type_id,
+                                   uint8_t priority, const void *payload,
+                                   uint16_t len, uint8_t *transfer_id);
 bool dronecan_respond(uint8_t destination_node_id, uint8_t *inout_transfer_id,
                       uint64_t signature, uint16_t type_id, uint8_t priority,
                       const void *payload, uint16_t len);
-bool dronecan_request(uint8_t destination_node_id, uint8_t *inout_transfer_id,
-                      uint64_t signature, uint16_t type_id, uint8_t priority,
-                      const void *payload, uint16_t len);
+bool dronecan_request_on_rcv_msg(uint8_t destination_node_id,
+                                 uint8_t *inout_transfer_id, uint64_t signature,
+                                 uint16_t type_id, uint8_t priority,
+                                 const void *payload, uint16_t len);
 
 SemaphoreHandle_t get_dronecan_communication_semaphore();
 CanardInstance *get_dronecan_instance();

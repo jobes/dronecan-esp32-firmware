@@ -2,6 +2,12 @@
 #include "dronecan_dna_receiver.h"
 #include "canard.h"
 
+__attribute__((weak)) bool
+dronecan_extra_should_accept(const CanardInstance *ins, uint64_t *out_data_type_signature, uint16_t data_type_id, CanardTransferType transfer_type, uint8_t source_node_id)
+{
+    return false;
+}
+
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"
 #include "messages/uavcan.protocol.RestartNode-5.h"
 #include "messages/uavcan.protocol.param.GetSet-11.h"
@@ -10,6 +16,7 @@
 #include "messages/uavcan.protocol.file.Read-48.h"
 #include "messages/uavcan.protocol.dynamic_node_id.Allocation-1.h"
 #include "messages/uavcan.protocol.GetTransportStats-4.h"
+#include "messages/uavcan.protocol.NodeStatus-341.h"
 
 bool should_accept_transfer(const CanardInstance *ins, uint64_t *out_data_type_signature, uint16_t data_type_id, CanardTransferType transfer_type, uint8_t source_node_id)
 {
@@ -49,6 +56,10 @@ bool should_accept_transfer(const CanardInstance *ins, uint64_t *out_data_type_s
             *out_data_type_signature = UAVCAN_FILE_READ_SIGNATURE;
             return true;
         }
+    }
+    if (dronecan_extra_should_accept(ins, out_data_type_signature, data_type_id, transfer_type, source_node_id))
+    {
+        return true;
     }
     return false;
 }

@@ -42,3 +42,23 @@ bool publish_1_dynamicNodeIdAllocation(uint8_t preferred_node_id, enum Allocatio
                               CANARD_TRANSFER_PRIORITY_HIGH,
                               buffer, msg_part_size + 1, &transfer_id);
 }
+
+bool publish_1_allocation_server_response(uint8_t allocated_node_id, const uint8_t *unique_id, uint8_t uid_len)
+{
+    static uint8_t transfer_id = 0;
+    uint8_t buffer[17] = {0};
+
+    // Bits 0-6: node_id, Bit 7: first_part_of_unique_id (always 1 for server responses)
+    uint8_t header = allocated_node_id | 0x80;
+    buffer[0] = header;
+
+    if (uid_len > 16)
+        uid_len = 16;
+    memcpy(&buffer[1], unique_id, uid_len);
+
+    bool answer = dronecan_broadcast_on_rcv_msg(
+        UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_SIGNATURE,
+        UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_ID,
+        CANARD_TRANSFER_PRIORITY_HIGH, buffer, uid_len + 1, &transfer_id);
+    return answer;
+}

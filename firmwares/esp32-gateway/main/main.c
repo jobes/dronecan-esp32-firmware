@@ -1,4 +1,5 @@
 #include "dronecan_mini/dronecan_tasks.h"
+#include "dronecan_dna_server.h"
 #include "esp_log.h"
 
 #include "cannelloni_bridge.h"
@@ -10,15 +11,19 @@
 
 static const char *TAG = "APP";
 
-static void main_task(void *arg) {
+static void main_task(void *arg)
+{
   ESP_LOGI(TAG, "Application task started");
 
-  if (*get_node_mode() == MODE_INITIALIZATION) {
+  if (*get_node_mode() == MODE_INITIALIZATION)
+  {
     set_node_mode(MODE_OPERATIONAL);
   }
 
-  while (1) {
-    if (*get_node_mode() != MODE_OPERATIONAL) {
+  while (1)
+  {
+    if (*get_node_mode() != MODE_OPERATIONAL)
+    {
       ESP_LOGW(
           TAG,
           "Node is not in operational mode, skipping sensor read and publish");
@@ -29,7 +34,8 @@ static void main_task(void *arg) {
   }
 }
 
-void app_main(void) {
+void app_main(void)
+{
   union DeviceParameter device_parameters[] = {
       {.String = {DEVICE_PARAM_TYPE_STRING, "HOSTNAME", "airplane_gateway"}},
       {.String = {DEVICE_PARAM_TYPE_STRING, "AP_SSID", "airplane_gateway"}},
@@ -43,6 +49,6 @@ void app_main(void) {
   cannelloni_bridge_init();
   dronecan_set_rx_frame_listener(cannelloni_bridge_push_frame);
   dronecan_set_tx_frame_listener(cannelloni_bridge_push_frame);
-  init_tasks(main_task, 1, 1);  // Core 1 for CAN/DroneCAN tasks
+  init_tasks(main_task, 1, 1); // Core 1 for CAN/DroneCAN tasks
+  dronecan_dna_server_init();
 }
-

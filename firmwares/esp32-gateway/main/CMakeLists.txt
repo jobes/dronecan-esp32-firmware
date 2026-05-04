@@ -4,6 +4,7 @@ idf_component_register(
         "wifi_manager.c"
         "http_server.c"
         "cannelloni_bridge.c"
+        "dronecan_dna_server.c"
     INCLUDE_DIRS
         "."
         "${PROJECT_DIR}/../../components"
