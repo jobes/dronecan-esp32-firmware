@@ -247,18 +247,21 @@ static void handle_allocation_request(CanardInstance *ins,
   }
 }
 
-void dronecan_extra_on_transfer_received(CanardInstance *ins,
+bool dronecan_extra_on_transfer_received(CanardInstance *ins,
                                          CanardRxTransfer *transfer)
 {
   dronecan_node_monitor_process_transfer(ins, transfer);
   if (transfer->data_type_id == UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_ID)
   {
     handle_allocation_request(ins, transfer);
+    return true;
   }
   else if (transfer->data_type_id == UAVCAN_NODE_STATUS_ID)
   {
     mark_occupied(transfer->source_node_id);
+    return true;
   }
+  return false;
 }
 
 bool dronecan_extra_should_accept(const CanardInstance *ins,

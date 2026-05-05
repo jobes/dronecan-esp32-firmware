@@ -9,9 +9,10 @@
 #include "esp_can.h"
 #include "firmware_update.h"
 
-__attribute__((weak)) void
+__attribute__((weak)) bool
 dronecan_extra_on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
 {
+  return false;
 }
 
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"
@@ -41,7 +42,10 @@ void restart(void *arg)
 void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
 {
   logical_rx++;
-  dronecan_extra_on_transfer_received(ins, transfer);
+  if (dronecan_extra_on_transfer_received(ins, transfer))
+  {
+    return;
+  }
   if (canardGetLocalNodeID(ins) == CANARD_BROADCAST_NODE_ID)
   {
     transfer_received_for_dna(ins, transfer);
