@@ -8,6 +8,7 @@
  * Loads existing allocations from NVS.
  */
 void dronecan_dna_server_init(void);
+bool dronecan_dna_server_get_uid(uint8_t node_id, uint8_t *out_uid);
 
 /**
  * @brief Handles incoming transfers for the DNA server.

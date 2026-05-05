@@ -160,6 +160,8 @@ void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
       }
 
       break;
+    case UAVCAN_GET_NODE_INFO_ID:
+      break;
     default:
       ESP_LOGW(TAG, "UNKNOWN RESPONSE RECEIVED: type_id=%d, source_node_id=%d",
                transfer->data_type_id, transfer->source_node_id);

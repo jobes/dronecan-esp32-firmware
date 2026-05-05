@@ -5,6 +5,7 @@
 #include "cannelloni_bridge.h"
 #include "dronecan_mini/dronecan_node_state.h"
 #include "dronecan_mini/dronecan_value_params.h"
+#include "dronecan_node_monitor.h"
 #include "dronecan_mini/messages/uavcan.equipment.air_data.StaticPressure-1028.h"
 #include "dronecan_mini/messages/uavcan.equipment.air_data.StaticTemperature-1029.h"
 #include "wifi_manager.h"
@@ -30,6 +31,7 @@ static void main_task(void *arg)
       vTaskDelay(pdMS_TO_TICKS(1000));
       continue;
     }
+    dronecan_node_monitor_tick();
     vTaskDelay(pdMS_TO_TICKS(100));
   }
 }

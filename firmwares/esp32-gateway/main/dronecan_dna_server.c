@@ -1,7 +1,9 @@
 #include "dronecan_dna_server.h"
 #include "dronecan_communication.h"
+#include "dronecan_node_monitor.h"
 #include "esp_log.h"
 #include "esp_timer.h"
+#include "messages/uavcan.protocol.GetNodeInfo-1.h"
 #include "messages/uavcan.protocol.NodeStatus-341.h"
 #include "messages/uavcan.protocol.dynamic_node_id.Allocation-1.h"
 #include "nvs.h"
@@ -23,6 +25,19 @@ typedef struct
 
 static dna_allocation_t s_allocations[MAX_ALLOCATIONS];
 static int s_allocation_count = 0;
+
+bool dronecan_dna_server_get_uid(uint8_t node_id, uint8_t *out_uid)
+{
+  for (int i = 0; i < s_allocation_count; i++)
+  {
+    if (s_allocations[i].node_id == node_id)
+    {
+      memcpy(out_uid, s_allocations[i].uid, 16);
+      return true;
+    }
+  }
+  return false;
+}
 
 typedef struct
 {
@@ -75,6 +90,8 @@ void dronecan_dna_server_init(void)
 
   // Mark local node ID as occupied
   mark_occupied(canardGetLocalNodeID(get_dronecan_instance()));
+
+  dronecan_node_monitor_init();
 }
 
 static void save_allocations(void)
@@ -233,6 +250,7 @@ static void handle_allocation_request(CanardInstance *ins,
 void dronecan_extra_on_transfer_received(CanardInstance *ins,
                                          CanardRxTransfer *transfer)
 {
+  dronecan_node_monitor_process_transfer(ins, transfer);
   if (transfer->data_type_id == UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_ID)
   {
     handle_allocation_request(ins, transfer);
@@ -264,6 +282,14 @@ bool dronecan_extra_should_accept(const CanardInstance *ins,
     if (data_type_id == UAVCAN_NODE_STATUS_ID)
     {
       *out_data_type_signature = UAVCAN_NODE_STATUS_SIGNATURE;
+      return true;
+    }
+  }
+  else if (transfer_type == CanardTransferTypeResponse)
+  {
+    if (data_type_id == UAVCAN_GET_NODE_INFO_ID)
+    {
+      *out_data_type_signature = UAVCAN_GET_NODE_INFO_SIGNATURE;
       return true;
     }
   }

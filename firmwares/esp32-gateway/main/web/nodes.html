@@ -1,0 +1,34 @@
+<h1>DroneCAN Nodes</h1>
+<link rel="stylesheet" href="/nodes.css" />
+
+<div style="overflow-x: auto; width: 100%">
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Unique ID</th>
+        <th>Health</th>
+        <th>Mode</th>
+        <th>Uptime</th>
+        <th>Last Seen</th>
+      </tr>
+    </thead>
+    <tbody id="node-table-body">
+      <!-- Data will be populated here -->
+    </tbody>
+  </table>
+</div>
+
+<dialog id="info-dialog">
+  <div class="dialog-header" id="dialog-title">Information</div>
+  <div class="dialog-body" id="dialog-text"></div>
+  <div class="dialog-footer">
+    <button onclick="document.getElementById('info-dialog').close()">
+      Close
+    </button>
+  </div>
+</dialog>
+
+<script src="/common.js"></script>
+<script src="/nodes.js"></script>

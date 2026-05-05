@@ -5,6 +5,7 @@ idf_component_register(
         "http_server.c"
         "cannelloni_bridge.c"
         "dronecan_dna_server.c"
+        "dronecan_node_monitor.c"
     INCLUDE_DIRS
         "."
         "${PROJECT_DIR}/../../components"
@@ -16,11 +17,19 @@ idf_component_register(
         "mdns"
         "esp_http_server"
     EMBED_TXTFILES
-        "template.html"
-        "status.html"
-        "system.html"
-        "ap.html"
-        "sta.html"
+        "web/template.html"
+        "web/status.html"
+        "web/system.html"
+        "web/ap.html"
+        "web/sta.html"
+        "web/nodes.html"
+        "web/style.css"
+        "web/nodes.css"
+        "web/common.js"
+        "web/nodes.js"
+        "web/status.js"
+    EMBED_FILES
+        "web/favicon.ico"
 )
 
 

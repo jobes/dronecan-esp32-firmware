@@ -5,8 +5,10 @@
 static const char *TAG = "HTTP_SRV";
 
 #include "dronecan_mini/dronecan_value_params.h"
+#include "dronecan_node_monitor.h"
 #include "esp_system.h"
 #include "esp_netif.h"
+#include "esp_timer.h"
 #include <string.h>
 
 static void url_decode(char *src)
@@ -56,6 +58,22 @@ extern const uint8_t ap_html_start[] asm("_binary_ap_html_start");
 extern const uint8_t ap_html_end[] asm("_binary_ap_html_end");
 extern const uint8_t sta_html_start[] asm("_binary_sta_html_start");
 extern const uint8_t sta_html_end[] asm("_binary_sta_html_end");
+extern const uint8_t nodes_html_start[] asm("_binary_nodes_html_start");
+extern const uint8_t nodes_html_end[] asm("_binary_nodes_html_end");
+
+extern const uint8_t style_css_start[] asm("_binary_style_css_start");
+extern const uint8_t style_css_end[] asm("_binary_style_css_end");
+extern const uint8_t nodes_css_start[] asm("_binary_nodes_css_start");
+extern const uint8_t nodes_css_end[] asm("_binary_nodes_css_end");
+extern const uint8_t common_js_start[] asm("_binary_common_js_start");
+extern const uint8_t common_js_end[] asm("_binary_common_js_end");
+extern const uint8_t nodes_js_start[] asm("_binary_nodes_js_start");
+extern const uint8_t nodes_js_end[] asm("_binary_nodes_js_end");
+extern const uint8_t status_js_start[] asm("_binary_status_js_start");
+extern const uint8_t status_js_end[] asm("_binary_status_js_end");
+
+extern const uint8_t favicon_ico_start[] asm("_binary_favicon_ico_start");
+extern const uint8_t favicon_ico_end[] asm("_binary_favicon_ico_end");
 
 static void send_with_replacements(httpd_req_t *req, const char *template, size_t len, const char **keys, const char **values, int count)
 {
@@ -94,9 +112,9 @@ static esp_err_t render_page(httpd_req_t *req, const char *active_page, const ui
   const char *template = (const char *)template_html_start;
 
   char nav_html[1024] = "<nav>";
-  const char *pages[] = {"Status", "System", "AP", "STA"};
-  const char *uris[] = {"/", "/system", "/ap", "/sta"};
-  for (int i = 0; i < 4; i++)
+  const char *pages[] = {"Status", "Nodes", "System", "AP", "STA"};
+  const char *uris[] = {"/", "/nodes", "/system", "/ap", "/sta"};
+  for (int i = 0; i < (int)ARRAY_SIZE(pages); i++)
   {
     const char *active_class = (strcmp(pages[i], active_page) == 0) ? " class=\"active\"" : "";
     char item[128];
@@ -121,14 +139,41 @@ static esp_err_t render_page(httpd_req_t *req, const char *active_page, const ui
   const char *after_nav = p_nav + strlen(nav_token);
   httpd_resp_send_chunk(req, after_nav, p_content - after_nav);
 
-  send_with_replacements(req, (const char *)content_start, content_end - content_start, keys, values, count);
+  send_with_replacements(req, (const char *)content_start, content_end - content_start - 1, keys, values, count);
 
   const char *after_content = p_content + strlen(content_token);
-  httpd_resp_send_chunk(req, after_content, (const char *)template_html_end - after_content);
+  httpd_resp_send_chunk(req, after_content, (const char *)template_html_end - after_content - 1);
 
   httpd_resp_send_chunk(req, NULL, 0);
   return ESP_OK;
 }
+
+typedef struct
+{
+  const uint8_t *start;
+  const uint8_t *end;
+  const char *type;
+  bool is_text;
+} asset_ctx_t;
+
+static esp_err_t asset_get_handler(httpd_req_t *req)
+{
+  asset_ctx_t *ctx = (asset_ctx_t *)req->user_ctx;
+  httpd_resp_set_type(req, ctx->type);
+  httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=31536000");
+  size_t len = ctx->end - ctx->start;
+  if (ctx->is_text && len > 0)
+    len--;
+  httpd_resp_send(req, (const char *)ctx->start, len);
+  return ESP_OK;
+}
+
+static const asset_ctx_t ctx_style_css = {style_css_start, style_css_end, "text/css", true};
+static const asset_ctx_t ctx_nodes_css = {nodes_css_start, nodes_css_end, "text/css", true};
+static const asset_ctx_t ctx_common_js = {common_js_start, common_js_end, "application/javascript", true};
+static const asset_ctx_t ctx_nodes_js = {nodes_js_start, nodes_js_end, "application/javascript", true};
+static const asset_ctx_t ctx_status_js = {status_js_start, status_js_end, "application/javascript", true};
+static const asset_ctx_t ctx_favicon = {favicon_ico_start, favicon_ico_end, "image/x-icon", false};
 
 static esp_err_t root_get_handler(httpd_req_t *req)
 {
@@ -158,13 +203,17 @@ static esp_err_t root_get_handler(httpd_req_t *req)
     snprintf(mdns_str, sizeof(mdns_str), "%s.local", p_hostname->String.value);
   }
 
-  const char *keys[] = {"{{HW_VER}}", "{{SW_VER}}", "{{IP_ADDR}}", "{{MDNS_ADDR}}"};
+  char uptime_str[16];
+  snprintf(uptime_str, sizeof(uptime_str), "%lld", (long long)(esp_timer_get_time() / 1000000));
+
+  const char *keys[] = {"{{HW_VER}}", "{{SW_VER}}", "{{IP_ADDR}}", "{{MDNS_ADDR}}", "{{UPTIME}}"};
   const char *values[] = {
       STR(MAJOR_HW_VERSION) "." STR(MINOR_HW_VERSION),
       STR(MAJOR_SW_VERSION) "." STR(MINOR_SW_VERSION),
       ip_str,
-      mdns_str};
-  return render_page(req, "Status", status_html_start, status_html_end, keys, values, 4);
+      mdns_str,
+      uptime_str};
+  return render_page(req, "Status", status_html_start, status_html_end, keys, values, 5);
 }
 
 static esp_err_t system_get_handler(httpd_req_t *req)
@@ -193,6 +242,33 @@ static esp_err_t sta_get_handler(httpd_req_t *req)
   return render_page(req, "STA", sta_html_start, sta_html_end, keys, values, 2);
 }
 
+static esp_err_t nodes_get_handler(httpd_req_t *req)
+{
+  return render_page(req, "Nodes", nodes_html_start, nodes_html_end, NULL, NULL, 0);
+}
+
+static esp_err_t api_nodes_get_handler(httpd_req_t *req)
+{
+  char *buf = malloc(4096);
+  if (!buf)
+    return httpd_resp_send_500(req);
+
+  dronecan_node_monitor_get_json(buf, 4096);
+  httpd_resp_set_type(req, "application/json");
+  httpd_resp_send(req, buf, strlen(buf));
+  free(buf);
+  return ESP_OK;
+}
+
+static esp_err_t api_status_get_handler(httpd_req_t *req)
+{
+  char buf[64];
+  snprintf(buf, sizeof(buf), "{\"uptime\": %lld}", (long long)(esp_timer_get_time() / 1000000));
+  httpd_resp_set_type(req, "application/json");
+  httpd_resp_send(req, buf, strlen(buf));
+  return ESP_OK;
+}
+
 static esp_err_t config_post_handler(httpd_req_t *req)
 {
   char buf[1024];
@@ -214,7 +290,7 @@ static esp_err_t config_post_handler(httpd_req_t *req)
                           "STA_PASSWORD"};
   bool changed = false;
 
-  for (int i = 0; i < 5; i++)
+  for (int i = 0; i < (int)ARRAY_SIZE(params); i++)
   {
     if (httpd_query_key_value(buf, params[i], val, sizeof(val)) == ESP_OK)
     {
@@ -292,20 +368,84 @@ static const httpd_uri_t restart_uri = {
     .handler = restart_post_handler,
 };
 
+static const httpd_uri_t nodes_uri = {
+    .uri = "/nodes",
+    .method = HTTP_GET,
+    .handler = nodes_get_handler,
+};
+
+static const httpd_uri_t api_nodes_uri = {
+    .uri = "/api/nodes",
+    .method = HTTP_GET,
+    .handler = api_nodes_get_handler,
+};
+
+static const httpd_uri_t api_status_uri = {
+    .uri = "/api/status",
+    .method = HTTP_GET,
+    .handler = api_status_get_handler,
+};
+
+static const httpd_uri_t style_css_uri = {
+    .uri = "/style.css",
+    .method = HTTP_GET,
+    .handler = asset_get_handler,
+    .user_ctx = (void *)&ctx_style_css};
+
+static const httpd_uri_t nodes_css_uri = {
+    .uri = "/nodes.css",
+    .method = HTTP_GET,
+    .handler = asset_get_handler,
+    .user_ctx = (void *)&ctx_nodes_css};
+
+static const httpd_uri_t common_js_uri = {
+    .uri = "/common.js",
+    .method = HTTP_GET,
+    .handler = asset_get_handler,
+    .user_ctx = (void *)&ctx_common_js};
+
+static const httpd_uri_t nodes_js_uri = {
+    .uri = "/nodes.js",
+    .method = HTTP_GET,
+    .handler = asset_get_handler,
+    .user_ctx = (void *)&ctx_nodes_js};
+
+static const httpd_uri_t status_js_uri = {
+    .uri = "/status.js",
+    .method = HTTP_GET,
+    .handler = asset_get_handler,
+    .user_ctx = (void *)&ctx_status_js};
+
+static const httpd_uri_t favicon_uri = {
+    .uri = "/favicon.ico",
+    .method = HTTP_GET,
+    .handler = asset_get_handler,
+    .user_ctx = (void *)&ctx_favicon};
+
 httpd_handle_t http_server_start(void)
 {
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+  config.max_uri_handlers = 16;
   config.lru_purge_enable = true;
   httpd_handle_t server = NULL;
 
   if (httpd_start(&server, &config) == ESP_OK)
   {
+    httpd_register_uri_handler(server, &api_status_uri);
     httpd_register_uri_handler(server, &root_uri);
     httpd_register_uri_handler(server, &system_uri);
     httpd_register_uri_handler(server, &ap_uri);
     httpd_register_uri_handler(server, &sta_uri);
     httpd_register_uri_handler(server, &config_uri);
     httpd_register_uri_handler(server, &restart_uri);
+    httpd_register_uri_handler(server, &nodes_uri);
+    httpd_register_uri_handler(server, &api_nodes_uri);
+    httpd_register_uri_handler(server, &style_css_uri);
+    httpd_register_uri_handler(server, &nodes_css_uri);
+    httpd_register_uri_handler(server, &common_js_uri);
+    httpd_register_uri_handler(server, &nodes_js_uri);
+    httpd_register_uri_handler(server, &status_js_uri);
+    httpd_register_uri_handler(server, &favicon_uri);
     ESP_LOGI(TAG, "HTTP server started on port %d", config.server_port);
   }
   else
