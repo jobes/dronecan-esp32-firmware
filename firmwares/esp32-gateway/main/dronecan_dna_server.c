@@ -1,6 +1,7 @@
 #include "dronecan_dna_server.h"
 #include "dronecan_communication.h"
 #include "dronecan_node_monitor.h"
+#include "dronecan_data_monitor.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "messages/uavcan.protocol.GetNodeInfo-1.h"
@@ -92,6 +93,7 @@ void dronecan_dna_server_init(void)
   mark_occupied(canardGetLocalNodeID(get_dronecan_instance()));
 
   dronecan_node_monitor_init();
+  dronecan_data_monitor_init();
 }
 
 static void save_allocations(void)
@@ -251,6 +253,7 @@ bool dronecan_extra_on_transfer_received(CanardInstance *ins,
                                          CanardRxTransfer *transfer)
 {
   dronecan_node_monitor_process_transfer(ins, transfer);
+  dronecan_data_monitor_process_transfer(ins, transfer);
   if (transfer->data_type_id == UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_ID)
   {
     handle_allocation_request(ins, transfer);
@@ -285,6 +288,13 @@ bool dronecan_extra_should_accept(const CanardInstance *ins,
     if (data_type_id == UAVCAN_NODE_STATUS_ID)
     {
       *out_data_type_signature = UAVCAN_NODE_STATUS_SIGNATURE;
+      return true;
+    }
+    uint64_t data_monitor_signature = 0;
+    if (dronecan_data_monitor_should_accept(data_type_id,
+                                            &data_monitor_signature))
+    {
+      *out_data_type_signature = data_monitor_signature;
       return true;
     }
   }

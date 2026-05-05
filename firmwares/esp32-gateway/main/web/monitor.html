@@ -1,0 +1,128 @@
+<div class="monitor-header">
+  <h1>Data Monitor</h1>
+  <button class="btn-add" onclick="openAddMonitor()">+ Add Monitor</button>
+</div>
+
+<div class="monitor-container">
+  <table class="monitor-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Value</th>
+        <th style="text-align: right">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="monitor-list">
+      <!-- Monitors will be injected here -->
+    </tbody>
+  </table>
+</div>
+
+<dialog id="monitor-dialog">
+  <form id="monitor-form" method="dialog">
+    <h3>Add Monitor</h3>
+    <input type="hidden" id="monitor-index" />
+
+    <div class="form-group">
+      <label for="m-presets">Presets</label>
+      <select id="m-presets" onchange="applyPreset(this.value)">
+        <option value="">-- Custom --</option>
+        <option value="pressure">Air Pressure (StaticPressure, float32)</option>
+        <option value="temperature">
+          Air Temperature (StaticTemperature, float16)
+        </option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="m-name">Display Name</label>
+      <input type="text" id="m-name" placeholder="e.g. Air Pressure" required />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="m-id">Message ID</label>
+        <input type="number" id="m-id" placeholder="e.g. 1028" required />
+      </div>
+      <div class="form-group">
+        <label for="m-signature">Message Signature</label>
+        <input
+          type="text"
+          id="m-signature"
+          placeholder="e.g. 0x44DC4133A6B487BA"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="m-bit">Start Bit</label>
+        <input type="number" id="m-bit" placeholder="0" required />
+      </div>
+      <div class="form-group">
+        <label for="m-len">Bit Length</label>
+        <input type="number" id="m-len" placeholder="32" required />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="m-type">Value Type</label>
+      <select id="m-type">
+        <option value="uint">Unsigned Integer</option>
+        <option value="int">Signed Integer</option>
+        <option value="float">Float (32-bit)</option>
+        <option value="float16">Float (16-bit)</option>
+        <option value="bool">Boolean</option>
+      </select>
+    </div>
+
+    <div class="dialog-actions">
+      <button
+        type="button"
+        class="btn-dialog btn-cancel"
+        onclick="closeMonitorDialog()"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="btn-dialog btn-save-monitor"
+        id="save-monitor"
+      >
+        Save Monitor
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="delete-dialog">
+  <div class="dialog-content">
+    <h3>Delete Monitor?</h3>
+    <p>
+      Are you sure you want to remove
+      <span
+        id="delete-name"
+        style="color: var(--primary); font-weight: bold"
+      ></span
+      >?
+    </p>
+    <input type="hidden" id="delete-index" />
+    <div class="dialog-actions">
+      <button
+        type="button"
+        class="btn-dialog btn-cancel"
+        onclick="closeDeleteDialog()"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="btn-dialog btn-delete-confirm"
+        onclick="confirmDelete()"
+      >
+        Delete
+      </button>
+    </div>
+  </div>
+</dialog>
+
+<link rel="stylesheet" href="/monitor.css" />
+<script src="/monitor.js"></script>

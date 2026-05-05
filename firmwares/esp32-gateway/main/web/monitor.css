@@ -1,0 +1,273 @@
+.monitor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 1rem;
+}
+
+.monitor-header h1 {
+    margin: 0;
+    text-align: left;
+}
+
+.monitor-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.monitor-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    min-width: 450px; /* Ensure table doesn't get too squashed */
+}
+
+.monitor-table th {
+    padding: 12px;
+    text-align: left;
+    color: #a0a0a0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.monitor-table td {
+    padding: 16px 12px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.monitor-table tr td:first-child {
+    border-radius: 8px 0 0 8px;
+}
+
+.monitor-table tr td:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+.monitor-table tr:hover td {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.monitor-table tr.expanded td {
+    background: rgba(15, 188, 249, 0.05);
+}
+
+.monitor-value {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--secondary);
+    text-shadow: 0 0 10px rgba(11, 232, 129, 0.3);
+}
+
+.row-indicator {
+    display: inline-block;
+    transition: transform 0.2s;
+    margin-right: 8px;
+    color: var(--primary);
+    font-size: 0.8rem;
+}
+
+.row-indicator.rotated {
+    transform: rotate(90deg);
+}
+
+.graph-container {
+    height: 140px;
+    width: 100%;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    margin-top: 5px;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.graph-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.btn-add {
+    background: linear-gradient(135deg, var(--primary), #4834d4);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 15px rgba(15, 188, 249, 0.3);
+}
+
+.btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(15, 188, 249, 0.4);
+}
+
+.btn-icon {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #ff3f34;
+    border-color: #ff3f34;
+}
+
+#monitor-dialog {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    background: var(--card-bg);
+    color: var(--text);
+    padding: 0;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+}
+
+#monitor-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+#monitor-dialog form {
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+}
+
+#monitor-dialog h3 {
+    margin-top: 0;
+    color: var(--primary);
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-dialog {
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s;
+}
+
+.btn-cancel {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text);
+}
+
+.btn-save-monitor {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 10px rgba(15, 188, 249, 0.2);
+}
+
+.btn-save-monitor:hover {
+    filter: brightness(1.1);
+}
+
+#delete-dialog {
+    border: 1px solid rgba(255, 63, 52, 0.2);
+    border-radius: 16px;
+    background: var(--card-bg);
+    color: var(--text);
+    padding: 2rem;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+}
+
+#delete-dialog h3 {
+    margin-top: 0;
+    color: #ff3f34;
+}
+
+#delete-dialog p {
+    color: #a0a0a0;
+    margin: 1.5rem 0;
+}
+
+.btn-delete-confirm {
+    background: #ff3f34;
+    color: white;
+    box-shadow: 0 4px 10px rgba(255, 63, 52, 0.2);
+}
+
+.btn-delete-confirm:hover {
+    background: #ff5e57;
+}
+
+select {
+    width: 100%;
+    padding: 0.7rem;
+    border-radius: 6px;
+    border: 1px solid #30475e;
+    background: var(--input-bg);
+    color: #fff;
+    cursor: pointer;
+}
+
+@media (max-width: 600px) {
+    .hide-mobile {
+        display: none;
+    }
+    .monitor-table td {
+        padding: 12px 8px;
+    }
+    .monitor-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    .btn-add {
+        width: 100%;
+    }
+    .monitor-value {
+        font-size: 1rem;
+    }
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    #monitor-dialog form {
+        padding: 1rem;
+    }
+}
+
+/* Global override for monitor width */
+.content .card {
+    max-width: 900px;
+}

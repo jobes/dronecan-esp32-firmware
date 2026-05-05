@@ -6,6 +6,7 @@ idf_component_register(
         "cannelloni_bridge.c"
         "dronecan_dna_server.c"
         "dronecan_node_monitor.c"
+        "dronecan_data_monitor.c"
     INCLUDE_DIRS
         "."
         "${PROJECT_DIR}/../../components"
@@ -28,6 +29,9 @@ idf_component_register(
         "web/common.js"
         "web/nodes.js"
         "web/status.js"
+        "web/monitor.html"
+        "web/monitor.css"
+        "web/monitor.js"
     EMBED_FILES
         "web/favicon.ico"
 )
