@@ -56,7 +56,7 @@ void on_transfer_received(CanardInstance *ins, CanardRxTransfer *transfer)
     {
     case UAVCAN_GET_NODE_INFO_ID:
     {
-      uint32_t uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
+      uint32_t uptime = (uint32_t)(esp_timer_get_time() / 1000000ULL);
       response_1_getNodeInfo(transfer->source_node_id, &transfer->transfer_id,
                              get_unique_id(), uptime, get_node_health(),
                              get_node_mode());

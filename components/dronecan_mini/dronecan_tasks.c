@@ -7,6 +7,7 @@
 #include "esp_can.h"
 #include "esp_log.h"
 #include "esp_ota_ops.h"
+#include "esp_timer.h"
 #include "messages/uavcan.protocol.NodeStatus-341.h"
 
 static const char *TAG = "TASKS";
@@ -70,7 +71,7 @@ static void dronecan_spin_task(void *arg)
       }
       int16_t result =
           canardHandleRxFrame(get_dronecan_instance(), &rx_frame,
-                              xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
+                              (uint64_t)esp_timer_get_time());
       if (result != 0 && result != -CANARD_ERROR_RX_NOT_WANTED &&
           result != -CANARD_ERROR_RX_WRONG_ADDRESS)
       {
@@ -87,7 +88,7 @@ static void dronecan_spin_task(void *arg)
       {
         int16_t result = canardHandleRxFrame(
             get_dronecan_instance(), &inject_frame,
-            xTaskGetTickCount() * portTICK_PERIOD_MS * 1000);
+            (uint64_t)esp_timer_get_time());
         if (result != 0 && result != -CANARD_ERROR_RX_NOT_WANTED &&
             result != -CANARD_ERROR_RX_WRONG_ADDRESS)
         {
@@ -99,8 +100,7 @@ static void dronecan_spin_task(void *arg)
 
     // 4. Cleanup stale transfers
     canardCleanupStaleTransfers(get_dronecan_instance(),
-                                xTaskGetTickCount() * portTICK_PERIOD_MS *
-                                    1000);
+                                (uint64_t)esp_timer_get_time());
 
     xSemaphoreGive(get_dronecan_communication_semaphore());
   }
@@ -114,7 +114,7 @@ static void heartbeat_task(void *arg)
 
   while (1)
   {
-    uint32_t uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
+    uint32_t uptime = (uint32_t)(esp_timer_get_time() / 1000000ULL);
     publish_341_nodeStatus(uptime, get_node_health(), get_node_mode());
     vTaskDelayUntil(
         &last_wake_time,

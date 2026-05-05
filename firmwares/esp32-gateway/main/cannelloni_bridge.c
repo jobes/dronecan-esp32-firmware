@@ -21,7 +21,7 @@ static const char *TAG = "CANNELLONI";
 typedef struct
 {
   struct sockaddr_in addr;
-  uint32_t last_seen_ms;
+  uint64_t last_seen_ms;
   bool active;
   bool has_seq;
   uint8_t seq;
@@ -51,7 +51,7 @@ uint8_t get_extra_iface_stats(uavcan_protocol_GetTransportStats_CanIfaceStats *s
 
 static uint32_t update_peer(struct sockaddr_in *addr, uint8_t seq)
 {
-  uint32_t now = xTaskGetTickCount() * portTICK_PERIOD_MS;
+  uint64_t now = (uint64_t)esp_timer_get_time() / 1000ULL;
   int first_free = -1;
   uint32_t dropped = 0;
 
@@ -95,7 +95,7 @@ static uint32_t update_peer(struct sockaddr_in *addr, uint8_t seq)
 
 static void prune_peers()
 {
-  uint32_t now = xTaskGetTickCount() * portTICK_PERIOD_MS;
+  uint64_t now = (uint64_t)esp_timer_get_time() / 1000ULL;
   for (int i = 0; i < CANNELLONI_MAX_PEERS; i++)
   {
     if (peers[i].active)
