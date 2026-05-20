@@ -110,7 +110,14 @@ static void send_with_replacements(httpd_req_t *req, const char *template, size_
     }
 
     httpd_resp_send_chunk(req, curr, next_token - curr);
-    httpd_resp_send_chunk(req, values[token_idx], strlen(values[token_idx]));
+    const char *replacement = values[token_idx] ? values[token_idx] : "";
+    size_t replacement_len = strlen(replacement);
+    // In ESP-IDF chunked responses, len==0 finalizes the response.
+    // Skip empty replacements to avoid truncating the page.
+    if (replacement_len > 0)
+    {
+      httpd_resp_send_chunk(req, replacement, replacement_len);
+    }
     curr = next_token + strlen(keys[token_idx]);
   }
 }
