@@ -48,8 +48,8 @@ bool publish_1_allocation_server_response(uint8_t allocated_node_id, const uint8
     static uint8_t transfer_id = 0;
     uint8_t buffer[17] = {0};
 
-    // Bits 0-6: node_id, Bit 7: first_part_of_unique_id (always 1 for server responses)
-    uint8_t header = allocated_node_id | 0x80;
+    uint8_t header = allocated_node_id << 1 & 0xFE;
+
     buffer[0] = header;
 
     if (uid_len > 16)

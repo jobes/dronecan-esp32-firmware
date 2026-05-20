@@ -44,6 +44,7 @@ typedef struct
 {
   uint8_t uid[16];
   uint8_t collected_mask; // bits 0, 1, 2 for parts
+  uint8_t preferred_node_id;
 } pending_allocation_t;
 
 static pending_allocation_t s_pending_allocation;
@@ -107,34 +108,68 @@ static void save_allocations(void)
 }
 
 // Find a free node ID in the dynamic range that is not occupied (by static node
-// id) and not already allocated (by dynamic node id)
-static uint8_t find_free_node_id(void)
+// id) and not already allocated (by dynamic node id). If a preferred ID is
+// provided, search upward from it first, then downward, as required by the
+// DroneCAN allocation procedure.
+static uint8_t find_free_node_id(uint8_t preferred_node_id)
 {
-  // Try to find a free ID in the dynamic range, starting from top
-  for (uint8_t id = DYNAMIC_ID_MAX; id >= DYNAMIC_ID_MIN; id--)
+  uint8_t start_id = preferred_node_id;
+  if (start_id < DYNAMIC_ID_MIN || start_id > DYNAMIC_ID_MAX)
   {
-    if (!is_occupied(id))
+    start_id = DYNAMIC_ID_MAX;
+  }
+
+  // Search upward from the preferred ID first. If no preference is given,
+  // this starts at the highest usable ID, which matches the standard.
+  for (int id = start_id; id <= DYNAMIC_ID_MAX; id++)
+  {
+    if (!is_occupied((uint8_t)id))
     {
       // Check if already allocated to someone else
       bool already_allocated = false;
       for (int i = 0; i < s_allocation_count; i++)
       {
-        if (s_allocations[i].node_id == id)
+        if (s_allocations[i].node_id == (uint8_t)id)
         {
           already_allocated = true;
           break;
         }
       }
       if (!already_allocated)
-        return id;
+        return (uint8_t)id;
     }
   }
+
+  if (preferred_node_id == 0)
+  {
+    return 0;
+  }
+
+  // If the preferred ID is unavailable, search downward from it.
+  for (int id = (int)preferred_node_id - 1; id >= DYNAMIC_ID_MIN; id--)
+  {
+    if (!is_occupied((uint8_t)id))
+    {
+      bool already_allocated = false;
+      for (int i = 0; i < s_allocation_count; i++)
+      {
+        if (s_allocations[i].node_id == (uint8_t)id)
+        {
+          already_allocated = true;
+          break;
+        }
+      }
+      if (!already_allocated)
+        return (uint8_t)id;
+    }
+  }
+
   return 0;
 }
 
-static void process_completed_allocation(const uint8_t *uid)
+static void process_completed_allocation(const uint8_t *uid,
+                                         uint8_t preferred_node_id)
 {
-  ESP_LOGI(TAG, "Full UID collected, issuing node ID...");
 
   // 1. Check if we already have an assignment for this UID
   uint8_t allocated_id = 0;
@@ -150,7 +185,7 @@ static void process_completed_allocation(const uint8_t *uid)
   // 2. If new node, find a free ID and save it
   if (allocated_id == 0)
   {
-    allocated_id = find_free_node_id();
+    allocated_id = find_free_node_id(preferred_node_id);
     if (allocated_id != 0 && s_allocation_count < MAX_ALLOCATIONS)
     {
       memcpy(s_allocations[s_allocation_count].uid, uid, 16);
@@ -164,6 +199,7 @@ static void process_completed_allocation(const uint8_t *uid)
   if (allocated_id != 0)
   {
     publish_1_allocation_server_response(allocated_id, uid, 16);
+    ESP_LOGI(TAG, "Full UID collected, issuing node ID %d", allocated_id);
   }
   else
   {
@@ -186,11 +222,11 @@ static void handle_allocation_request(CanardInstance *ins,
   // Header is 1 for Part 1, 0 for Parts 2 and 3.
   // Part 2 has 6 bytes of UID, Part 3 has 4 bytes of UID.
   int part_index = -1;
-  if (header == 1 && part_len == 6)
+  if ((header & 0x01) && part_len == 6)
   {
     part_index = 0;
   }
-  else if (header == 0)
+  else if ((header & 0x01) == 0)
   {
     if (part_len == 6)
     {
@@ -217,6 +253,9 @@ static void handle_allocation_request(CanardInstance *ins,
     memset(s_pending_allocation.uid, 0, 16);
     memcpy(s_pending_allocation.uid, part_data, part_len);
     s_pending_allocation.collected_mask = (1 << 0);
+    s_pending_allocation.preferred_node_id = 0;
+    canardDecodeScalar(transfer, 0, 7, false,
+                       &s_pending_allocation.preferred_node_id);
     ESP_LOGI(TAG, "Started pending DNA allocation for UID prefix %02x%02x",
              part_data[0], part_data[1]);
 
@@ -237,8 +276,10 @@ static void handle_allocation_request(CanardInstance *ins,
 
     if (s_pending_allocation.collected_mask == 0x07) // All 3 parts collected
     {
-      process_completed_allocation(s_pending_allocation.uid);
+      process_completed_allocation(s_pending_allocation.uid,
+                                   s_pending_allocation.preferred_node_id);
       s_pending_allocation.collected_mask = 0;
+      s_pending_allocation.preferred_node_id = 0;
     }
     else
     {
@@ -254,7 +295,7 @@ bool dronecan_extra_on_transfer_received(CanardInstance *ins,
 {
   dronecan_node_monitor_process_transfer(ins, transfer);
   dronecan_data_monitor_process_transfer(ins, transfer);
-  if (transfer->data_type_id == UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_ID)
+  if (transfer->data_type_id == UAVCAN_PROTOCOL_DYNAMIC_NODE_ID_ALLOCATION_ID && transfer->transfer_type == CanardTransferTypeBroadcast)
   {
     handle_allocation_request(ins, transfer);
     return true;
