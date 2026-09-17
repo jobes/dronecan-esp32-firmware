@@ -107,61 +107,40 @@ static void save_allocations(void)
   }
 }
 
-// Find a free node ID in the dynamic range that is not occupied (by static node
-// id) and not already allocated (by dynamic node id). If a preferred ID is
-// provided, search upward from it first, then downward, as required by the
-// DroneCAN allocation procedure.
+static bool is_id_available(uint8_t node_id)
+{
+  if (is_occupied(node_id))
+    return false;
+  for (int i = 0; i < s_allocation_count; i++)
+  {
+    if (s_allocations[i].node_id == node_id)
+      return false;
+  }
+  return true;
+}
+
+// Search upward from the preferred ID first, then downward. Without a
+// preference (0) or with one outside the dynamic range, start at the highest
+// usable ID, as required by the DroneCAN allocation procedure.
 static uint8_t find_free_node_id(uint8_t preferred_node_id)
 {
-  uint8_t start_id = preferred_node_id;
-  if (start_id < DYNAMIC_ID_MIN || start_id > DYNAMIC_ID_MAX)
+  int start_id = DYNAMIC_ID_MAX;
+  if (preferred_node_id >= DYNAMIC_ID_MIN &&
+      preferred_node_id <= DYNAMIC_ID_MAX)
   {
-    start_id = DYNAMIC_ID_MAX;
+    start_id = preferred_node_id;
   }
 
-  // Search upward from the preferred ID first. If no preference is given,
-  // this starts at the highest usable ID, which matches the standard.
   for (int id = start_id; id <= DYNAMIC_ID_MAX; id++)
   {
-    if (!is_occupied((uint8_t)id))
-    {
-      // Check if already allocated to someone else
-      bool already_allocated = false;
-      for (int i = 0; i < s_allocation_count; i++)
-      {
-        if (s_allocations[i].node_id == (uint8_t)id)
-        {
-          already_allocated = true;
-          break;
-        }
-      }
-      if (!already_allocated)
-        return (uint8_t)id;
-    }
+    if (is_id_available((uint8_t)id))
+      return (uint8_t)id;
   }
 
-  if (preferred_node_id == 0)
+  for (int id = start_id - 1; id >= DYNAMIC_ID_MIN; id--)
   {
-    return 0;
-  }
-
-  // If the preferred ID is unavailable, search downward from it.
-  for (int id = (int)preferred_node_id - 1; id >= DYNAMIC_ID_MIN; id--)
-  {
-    if (!is_occupied((uint8_t)id))
-    {
-      bool already_allocated = false;
-      for (int i = 0; i < s_allocation_count; i++)
-      {
-        if (s_allocations[i].node_id == (uint8_t)id)
-        {
-          already_allocated = true;
-          break;
-        }
-      }
-      if (!already_allocated)
-        return (uint8_t)id;
-    }
+    if (is_id_available((uint8_t)id))
+      return (uint8_t)id;
   }
 
   return 0;
